@@ -109,45 +109,25 @@ class MenuGenerator(object):
         """
         Jump from context to Sg
         """
-        url = "http://shotgun-staging.clusterstudio.com/"
-        if self._engine.context.entity is None:
-            # project-only!
-            url = "%s/detail/%s/%d" % (self._engine.shotgun.base_url,
-                                       "Project",
-                                       self._engine.context.project["id"])
-        else:
-            # entity-based
-            url = "%s/detail/%s/%d" % (self._engine.shotgun.base_url,
-                                       self._engine.context.entity["type"],
-                                       self._engine.context.entity["id"])
-        self._engine.log_debug(url)
-        webbrowser.open(url, new = 2)
+        url = self._engine.context.shotgun_url
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))        
 
     def _jump_to_fs(self):
         """
         Jump from context to Fs
         """
-         
-        if self._engine.context.entity:
-            paths = self._engine.tank.paths_from_entity(self._engine.context.entity["type"],
-                                                     self._engine.context.entity["id"])
-        else:
-            paths = self._engine.tank.paths_from_entity(self._engine.context.project["type"],
-                                                     self._engine.context.project["id"])
-        
-        # launch one window for each location on disk
-        # todo: can we do this in a more elegant way?
+        paths = self._engine.context.filesystem_locations
         for disk_location in paths:
                 
             # get the setting        
-            system = platform.system()
+            system = sys.platform
             
             # run the app
-            if system == "Linux":
+            if system == "linux2":
                 cmd = 'xdg-open "%s"' % disk_location
-            elif system == "Darwin":
+            elif system == "darwin":
                 cmd = 'open "%s"' % disk_location
-            elif system == "Windows":
+            elif system == "win32":
                 cmd = 'cmd.exe /C start "Folder" "%s"' % disk_location
             else:
                 raise Exception("Platform '%s' is not supported." % system)
@@ -161,7 +141,6 @@ class MenuGenerator(object):
         Add all apps to the main menu, process them one by one.
         """
         for app_name in sorted(commands_by_app.keys()):
-            
             
             if len(commands_by_app[app_name]) > 1:
                 # more than one menu entry fort his app
