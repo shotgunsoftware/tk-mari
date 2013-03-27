@@ -29,11 +29,6 @@ class HieroEngine(tank.platform.Engine):
                             "engine requires a context which exists on disk in order to run "
                             "correctly.")
 
-        # create queue
-        self._queue = []
-        self._queue_runing = False
-
-        # # End of copied from Nuke Engine
 
     def post_app_init(self):
         """
@@ -77,20 +72,3 @@ class HieroEngine(tank.platform.Engine):
         msg = "Tank Error: %s" % msg
         hiero.core.error(msg)
     
-    def add_to_queue(self, name, method, args):
-        """
-        """
-        qi = {}
-        qi['name'] = name
-        qi['method'] = method
-        qi['args'] = args
-        self._queue.append(qi)
-
-    def report_progress(self, percent):
-        """
-        """
-
-    def execute_queue(self):
-        """
-        """
-
