@@ -1,3 +1,5 @@
+import tank
+import sys
 import os
 import hiero
 import webbrowser
@@ -109,6 +111,7 @@ class MenuGenerator(object):
         """
         Jump from context to Sg
         """
+        from tank.platform.qt import QtCore, QtGui 
         url = self._engine.context.shotgun_url
         QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))        
 

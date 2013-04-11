@@ -31,8 +31,10 @@ class HieroEngine(tank.platform.Engine):
     def log_debug(self, msg):
         """
         """
-        msg = "Tank Debug: %s" % msg
-        hiero.core.debug(msg)
+        if self.get_setting("debug_logging", False):
+            # print it in the console
+            msg = "Tank Debug: %s" % msg
+            print msg
 
     def log_info(self, msg):
         """
@@ -50,5 +52,5 @@ class HieroEngine(tank.platform.Engine):
         """
         """
         msg = "Tank Error: %s" % msg
-        hiero.core.error(msg)
-    
+        print msg
+
