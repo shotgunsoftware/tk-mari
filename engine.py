@@ -1,8 +1,8 @@
 import tank
 import hiero.core
 
-class HieroEngine(tank.platform.Engine):
 
+class HieroEngine(tank.platform.Engine):
     def init_engine(self):
         """
         """
@@ -27,7 +27,8 @@ class HieroEngine(tank.platform.Engine):
         """
         """
         self.log_debug("%s: Destroying..." % self)
-    
+        self._menu_generator.destroy_menu()
+
     def log_debug(self, msg):
         """
         """
@@ -40,17 +41,16 @@ class HieroEngine(tank.platform.Engine):
         """
         """
         msg = "Tank Info: %s" % msg
-        hiero.core.info(msg)
+        print msg
 
     def log_warning(self, msg):
         """
         """
         msg = "Tank Warning: %s" % msg
-        hiero.core.info(msg)
+        print msg
 
     def log_error(self, msg):
         """
         """
         msg = "Tank Error: %s" % msg
         print msg
-
