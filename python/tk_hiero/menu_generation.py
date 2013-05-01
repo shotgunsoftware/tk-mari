@@ -8,6 +8,7 @@ class MenuGenerator(object):
     def __init__(self, engine):
         self._engine = engine
         self._menu_handle = None
+        self._context_menus_to_apps = None
 
     def create_menu(self):
         """
@@ -42,6 +43,33 @@ class MenuGenerator(object):
                     # mark as a favourite item
                     cmd.favourite = True
 
+        # get the apps for the various context menus
+        self._context_menus_to_apps = {
+            'bin_context_menu': [],
+            'timeline_context_menu': [],
+            'viewer_context_menu': [],
+            'spreadsheet_context_menu': [],
+        }
+        for (key, apps) in self._context_menus_to_apps.iteritems():
+            items = self._engine.get_setting(key)
+            for item in items:
+                app_instance_name = item['app_instance']
+                menu_name = item['name']
+                # scan through all menu items
+                for (i, cmd) in enumerate(menu_items):
+                    if cmd.get_app_instance_name() == app_instance_name and cmd.name == menu_name:
+                        # found th match
+                        apps.append(cmd)
+                        cmd.requires_selection = item['requires_selection']
+                        if not item['keep_in_menu']:
+                            del menu_items[i]
+                        break
+        # register for the interesting events
+        hiero.core.events.registerInterest('kShowContextMenu/kBin', self.eventHandler)
+        hiero.core.events.registerInterest('kShowContextMenu/kTimeline', self.eventHandler)
+        hiero.core.events.registerInterest('kShowContextMenu/kViewer', self.eventHandler)
+        hiero.core.events.registerInterest('kShowContextMenu/kSpreadsheet', self.eventHandler)
+
         self._menu_handle.addSeparator()
 
         # now go through all of the menu items.
@@ -71,6 +99,22 @@ class MenuGenerator(object):
         menuBar = hiero.ui.menuBar()
         menuBar.removeAction(self._menu_handle.menuAction())
         self._menu_handle = None
+
+    def eventHandler(self, event):
+        if event.subtype == 'kBin':
+            cmds = self._context_menus_to_apps['bin_context_menu']
+        elif event.subtype == 'kTimeline':
+            cmds = self._context_menus_to_apps['timeline_context_menu']
+        elif event.subtype == 'kViewer':
+            cmds = self._context_menus_to_apps['viewer_context_menu']
+        elif event.subtype == 'kSpreadsheet':
+            cmds = self._context_menus_to_apps['spreadsheet_context_menu']
+
+        for cmd in cmds:
+            enabled = True
+            if cmd.requires_selection and not event.sender.selection():
+                enabled = False
+            cmd.add_command_to_menu(event.menu, enabled)
 
     def _add_context_menu(self):
         """
@@ -167,6 +211,7 @@ class AppCommand(object):
         self.properties = command_dict["properties"]
         self.callback = command_dict["callback"]
         self.favourite = False
+        self.requires_selection = False
 
     def get_app_name(self):
         """
@@ -214,12 +259,13 @@ class AppCommand(object):
         """
         return self.properties.get("type", "default")
 
-    def add_command_to_menu(self, menu):
+    def add_command_to_menu(self, menu, enabled=True):
         """
         Adds an app command to the menu
         """
         icon = self.properties.get('icon')
         action = menu.addAction(self.name)
+        action.setEnabled(enabled)
         if icon:
             action.setIcon(icon)
         action.triggered.connect(self.callback)
