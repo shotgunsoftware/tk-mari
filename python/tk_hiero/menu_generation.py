@@ -1,8 +1,13 @@
+"""
+Copyright (c) 2013 Shotgun Software, Inc
+----------------------------------------------------
+"""
 import sys
 import os
 import hiero
 import unicodedata
 
+from PySide import QtGui
 
 class MenuGenerator(object):
     def __init__(self, engine):
@@ -17,8 +22,10 @@ class MenuGenerator(object):
         if self._menu_handle is not None:
             self.destroy_menu()
 
+        self._menu_handle = QtGui.QMenu("Shotgun")
+        help = hiero.ui.findMenuAction("Cache")
         menuBar = hiero.ui.menuBar()
-        self._menu_handle = menuBar.addMenu("Tank")
+        menuBar.insertMenu(help, self._menu_handle)
 
         self._menu_handle.clear()
 
@@ -50,6 +57,8 @@ class MenuGenerator(object):
             'viewer_context_menu': [],
             'spreadsheet_context_menu': [],
         }
+
+        remove = set()
         for (key, apps) in self._context_menus_to_apps.iteritems():
             items = self._engine.get_setting(key)
             for item in items:
@@ -62,8 +71,12 @@ class MenuGenerator(object):
                         apps.append(cmd)
                         cmd.requires_selection = item['requires_selection']
                         if not item['keep_in_menu']:
-                            del menu_items[i]
+                            remove.add(i)
                         break
+
+        for index in sorted(remove, reverse=True):
+            del menu_items[index]
+
         # register for the interesting events
         hiero.core.events.registerInterest('kShowContextMenu/kBin', self.eventHandler)
         hiero.core.events.registerInterest('kShowContextMenu/kTimeline', self.eventHandler)
@@ -110,11 +123,23 @@ class MenuGenerator(object):
         elif event.subtype == 'kSpreadsheet':
             cmds = self._context_menus_to_apps['spreadsheet_context_menu']
 
+        if not cmds:
+            return
+
+        event.menu.addSeparator()
+        menu = event.menu.addAction("Shotgun")
+        menu.setEnabled(False)
+
         for cmd in cmds:
             enabled = True
-            if cmd.requires_selection and not event.sender.selection():
-                enabled = False
+            if cmd.requires_selection:
+                if hasattr(event.sender, 'selection') and not event.sender.selection():
+                    enabled = False
+            cmd.sender = event.sender
+            cmd.eventType = event.type
+            cmd.eventSubtype = event.subtype
             cmd.add_command_to_menu(event.menu, enabled)
+        event.menu.addSeparator()
 
     def _add_context_menu(self):
         """
@@ -212,6 +237,9 @@ class AppCommand(object):
         self.callback = command_dict["callback"]
         self.favourite = False
         self.requires_selection = False
+        self.sender = None
+        self.eventType = None
+        self.eventSubtype = None
 
     def get_app_name(self):
         """
@@ -268,4 +296,25 @@ class AppCommand(object):
         action.setEnabled(enabled)
         if icon:
             action.setIcon(icon)
-        action.triggered.connect(self.callback)
+
+        def handler():
+            if "sender" in self.properties:
+                self.properties["sender"] = self.sender
+            if "eventType" in self.properties:
+                self.properties["eventType"] = self.eventType
+            if "eventSubtype" in self.properties:
+                self.properties["eventSubtype"] = self.eventSubtype
+
+            self.callback()
+
+            if "sender" in self.properties:
+                self.sender = None
+                self.properties["sender"] = None
+            if "eventType" in self.properties:
+                self.eventType = None
+                self.properties["eventType"] = None
+            if "eventSubtype" in self.properties:
+                self.eventSubtype = None
+                self.properties["eventSubtype"] = None
+
+        action.triggered.connect(handler)
