@@ -102,5 +102,3 @@ configuration:
                 name: { type: str }
                 app_instance: { type: str }
 
-# the Shotgun fields that this engine needs in order to operate correctly
-requires_shotgun_fields:
