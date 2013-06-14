@@ -1,3 +1,11 @@
+# More verbose description of this item 
+display_name: "Hiero Engine"
+description: "Tank Integration in Hiero"
+
+# Required minimum versions for this item to run
+requires_shotgun_version:
+requires_core_version: 
+
 configuration:
     debug_logging:
         type: bool
