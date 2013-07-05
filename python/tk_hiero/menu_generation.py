@@ -314,7 +314,11 @@ class AppCommand(object):
             # We extract the selected objects and set the engine "last clicked" state:
             
             # set the engine last clicked selection state
-            self.engine._last_clicked_selection = self.sender.selection()
+            if self.sender:
+                self.engine._last_clicked_selection = self.sender.selection()
+            else:
+                # main menu
+                self.engine._last_clicked_selection = []
             
             # set the engine last clicked selection area
             if self.eventType == "kBin":
@@ -329,13 +333,14 @@ class AppCommand(object):
             else:
                 self.engine._last_clicked_area = None
             
-            
+            self.engine.log_debug("")
+            self.engine.log_debug("--------------------------------------------")
             self.engine.log_debug("A menu item was clicked!")
             self.engine.log_debug("Event Type: %s / %s" % (self.eventType, self.eventSubtype))
             self.engine.log_debug("Selected Objects:")
-            for x in self.sender.selection():
+            for x in self.engine._last_clicked_selection:
                 self.engine.log_debug("- %r" % x)
-            self.engine.log_debug("")
+            self.engine.log_debug("--------------------------------------------")
             
             # and fire the callback
             self.callback()

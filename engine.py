@@ -16,8 +16,6 @@ class HieroEngine(tank.platform.Engine):
     (HIERO_BIN_AREA, HIERO_SPREADSHEET_AREA, HIERO_TIMELINE_AREA) = range(3)
     
     def init_engine(self):
-        if self.get_setting("debug_logging", False):
-            hiero.core.log.setLogLevel(hiero.core.log.kDebug)
 
         # tracking where a menu click took place.
         self._last_clicked_selection = []
@@ -26,7 +24,7 @@ class HieroEngine(tank.platform.Engine):
         self.log_debug("%s: Initializing..." % self)
 
 
-    def get_selected_items(self):
+    def get_menu_selection(self):
         """
         Returns the list of hiero objects selected in the most recent menu click.
         This list may contain items of various types. To see exactly what is being 
@@ -46,7 +44,7 @@ class HieroEngine(tank.platform.Engine):
         """
         return self._last_clicked_selection
         
-    def get_area_for_menu_click(self):
+    def get_menu_category(self):
         """
         Returns the UI area where the last menu click took place.
         
@@ -73,9 +71,16 @@ class HieroEngine(tank.platform.Engine):
     # Logging
     ############################################################################
     def log_debug(self, msg):
-        hiero.core.log.debug("Sgtk: %s" % msg)
+        if self.get_setting("debug_logging", False):
+            # ensure the debug log channel is on
+            # we do this lazily to reduce amount of noise from hiero
+            hiero.core.log.setLogLevel(hiero.core.log.kDebug)
+            hiero.core.log.debug("Shotgun: %s" % msg)
 
     def log_info(self, msg):
+        # ensure the debug log channel is on
+        # we do this lazily to reduce amount of noise from hiero
+        hiero.core.log.setLogLevel(hiero.core.log.kInfo)
         hiero.core.log.info("Shotgun: %s" % msg)
 
     def log_warning(self, msg):
