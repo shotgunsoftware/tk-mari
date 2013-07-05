@@ -36,7 +36,7 @@ class MenuGenerator(object):
         # now enumerate all items and create menu objects for them
         menu_items = []
         for (cmd_name, cmd_details) in self._engine.commands.items():
-            menu_items.append(AppCommand(cmd_name, cmd_details))
+            menu_items.append(AppCommand(self._engine, cmd_name, cmd_details))
 
         # now add favourites
         for fav in self._engine.get_setting("menu_favourites"):
@@ -52,25 +52,24 @@ class MenuGenerator(object):
 
         # get the apps for the various context menus
         self._context_menus_to_apps = {
-            'bin_context_menu': [],
-            'timeline_context_menu': [],
-            'viewer_context_menu': [],
-            'spreadsheet_context_menu': [],
+            "bin_context_menu": [],
+            "timeline_context_menu": [],
+            "spreadsheet_context_menu": [],
         }
 
         remove = set()
         for (key, apps) in self._context_menus_to_apps.iteritems():
             items = self._engine.get_setting(key)
             for item in items:
-                app_instance_name = item['app_instance']
-                menu_name = item['name']
+                app_instance_name = item["app_instance"]
+                menu_name = item["name"]
                 # scan through all menu items
                 for (i, cmd) in enumerate(menu_items):
                     if cmd.get_app_instance_name() == app_instance_name and cmd.name == menu_name:
                         # found th match
                         apps.append(cmd)
-                        cmd.requires_selection = item['requires_selection']
-                        if not item['keep_in_menu']:
+                        cmd.requires_selection = item["requires_selection"]
+                        if not item["keep_in_menu"]:
                             remove.add(i)
                         break
 
@@ -78,10 +77,13 @@ class MenuGenerator(object):
             del menu_items[index]
 
         # register for the interesting events
-        hiero.core.events.registerInterest('kShowContextMenu/kBin', self.eventHandler)
-        hiero.core.events.registerInterest('kShowContextMenu/kTimeline', self.eventHandler)
-        hiero.core.events.registerInterest('kShowContextMenu/kViewer', self.eventHandler)
-        hiero.core.events.registerInterest('kShowContextMenu/kSpreadsheet', self.eventHandler)
+        hiero.core.events.registerInterest("kShowContextMenu/kBin", self.eventHandler)
+        hiero.core.events.registerInterest("kShowContextMenu/kTimeline", self.eventHandler)
+        # note that the kViewer works differently than the other things
+        # (returns a hiero.ui.Viewer object: http://docs.thefoundry.co.uk/hiero/10/hieropythondevguide/api/api_ui.html#hiero.ui.Viewer)
+        # so we cannot support this easily using the same principles as for the other things....
+        #hiero.core.events.registerInterest('kShowContextMenu/kViewer', self.eventHandler)
+        hiero.core.events.registerInterest("kShowContextMenu/kSpreadsheet", self.eventHandler)
 
         self._menu_handle.addSeparator()
 
@@ -93,8 +95,6 @@ class MenuGenerator(object):
             if cmd.get_type() == "context_menu":
                 # context menu!
                 cmd.add_command_to_menu(self._context_menu)
-            elif cmd.get_type() == "custom_window":
-                "TODO: add custom window"
             else:
                 # normal menu
                 app_name = cmd.get_app_name()
@@ -114,14 +114,12 @@ class MenuGenerator(object):
         self._menu_handle = None
 
     def eventHandler(self, event):
-        if event.subtype == 'kBin':
-            cmds = self._context_menus_to_apps['bin_context_menu']
-        elif event.subtype == 'kTimeline':
-            cmds = self._context_menus_to_apps['timeline_context_menu']
-        elif event.subtype == 'kViewer':
-            cmds = self._context_menus_to_apps['viewer_context_menu']
-        elif event.subtype == 'kSpreadsheet':
-            cmds = self._context_menus_to_apps['spreadsheet_context_menu']
+        if event.subtype == "kBin":
+            cmds = self._context_menus_to_apps["bin_context_menu"]
+        elif event.subtype == "kTimeline":
+            cmds = self._context_menus_to_apps["timeline_context_menu"]
+        elif event.subtype == "kSpreadsheet":
+            cmds = self._context_menus_to_apps["spreadsheet_context_menu"]
 
         if not cmds:
             return
@@ -133,7 +131,7 @@ class MenuGenerator(object):
         for cmd in cmds:
             enabled = True
             if cmd.requires_selection:
-                if hasattr(event.sender, 'selection') and not event.sender.selection():
+                if hasattr(event.sender, "selection") and not event.sender.selection():
                     enabled = False
             cmd.sender = event.sender
             cmd.eventType = event.type
@@ -231,8 +229,9 @@ class AppCommand(object):
     """
     Wraps around a single command that you get from engine.commands
     """
-    def __init__(self, name, command_dict):
+    def __init__(self, engine, name, command_dict):
         self.name = name
+        self.engine = engine
         self.properties = command_dict["properties"]
         self.callback = command_dict["callback"]
         self.favourite = False
@@ -276,7 +275,7 @@ class AppCommand(object):
             doc_url = app.documentation_url
             # deal with nuke's inability to handle unicode. #fail
             if doc_url.__class__ == unicode:
-                doc_url = unicodedata.normalize('NFKD', doc_url).encode('ascii', 'ignore')
+                doc_url = unicodedata.normalize("NFKD", doc_url).encode("ascii", "ignore")
             return doc_url
 
         return None
@@ -291,30 +290,55 @@ class AppCommand(object):
         """
         Adds an app command to the menu
         """
-        icon = self.properties.get('icon')
+        icon = self.properties.get("icon")
         action = menu.addAction(self.name)
         action.setEnabled(enabled)
         if icon:
             action.setIcon(icon)
 
         def handler():
-            if "sender" in self.properties:
-                self.properties["sender"] = self.sender
-            if "eventType" in self.properties:
-                self.properties["eventType"] = self.eventType
-            if "eventSubtype" in self.properties:
-                self.properties["eventSubtype"] = self.eventSubtype
-
+            # populate special action context
+            # this is read by apps and hooks 
+            
+            # in hiero, sender parameter for hiero.core.events.EventType.kShowContextMenu
+            # is supposed to always of class binview:
+            #
+            # http://docs.thefoundry.co.uk/hiero/10/hieropythondevguide/api/api_ui.html?highlight=sender#hiero.ui.BinView
+            #
+            # In reality, however, it seems it returns the following items:
+            # ui.Hiero.Python.TimelineEditor object at 0x11ab15248
+            # ui.Hiero.Python.SpreadsheetView object at 0x11ab152d8>
+            # ui.Hiero.Python.BinView
+            #
+            # These objects all have a selection property that returns a list of objects.
+            # We extract the selected objects and set the engine "last clicked" state:
+            
+            # set the engine last clicked selection state
+            self.engine._last_clicked_selection = self.sender.selection()
+            
+            # set the engine last clicked selection area
+            if self.eventType == "kBin":
+                self.engine._last_clicked_area = self.engine.HIERO_BIN_AREA
+            
+            elif self.eventType == "kTimeline":
+                self.engine._last_clicked_area = self.engine.HIERO_TIMELINE_AREA
+            
+            elif self.eventType == "kSpreadsheet":
+                self.engine._last_clicked_area = self.engine.HIERO_SPREADSHEET_AREA
+            
+            else:
+                self.engine._last_clicked_area = None
+            
+            
+            self.engine.log_debug("A menu item was clicked!")
+            self.engine.log_debug("Event Type: %s / %s" % (self.eventType, self.eventSubtype))
+            self.engine.log_debug("Selected Objects:")
+            for x in self.sender.selection():
+                self.engine.log_debug("- %r" % x)
+            self.engine.log_debug("")
+            
+            # and fire the callback
             self.callback()
 
-            if "sender" in self.properties:
-                self.sender = None
-                self.properties["sender"] = None
-            if "eventType" in self.properties:
-                self.eventType = None
-                self.properties["eventType"] = None
-            if "eventSubtype" in self.properties:
-                self.eventSubtype = None
-                self.properties["eventSubtype"] = None
 
         action.triggered.connect(handler)
