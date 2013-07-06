@@ -1,2 +1,1 @@
-tk-hiero
-========
+This is the Hiero Engine for the Shotgun Pipeline Toolkit.
