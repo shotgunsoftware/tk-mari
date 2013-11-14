@@ -70,15 +70,14 @@ class HieroEngine(tank.platform.Engine):
         self._menu_generator.create_menu()
 
         def set_project_root(event):
-            """Hiero may open with default startup projects. Ensure they all 
-            have a project root once Hiero starts up.
+            """Ensure any new projects get the project root or default startup 
+            projects get the project root set
             """ 
             for p in hiero.core.projects():
                 if not p.projectRoot():
                     self.log_debug("Setting projectRoot on %s to: %s" % (p.name(), self.tank.project_path))
                     p.setProjectRoot(self.tank.project_path)
-        
-        hiero.core.events.registerInterest('kStartup', set_project_root)
+        hiero.core.events.registerInterest('kAfterNewProjectCreated', set_project_root)
 
     def destroy_engine(self):
         self.log_debug("%s: Destroying..." % self)
