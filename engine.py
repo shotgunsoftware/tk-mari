@@ -63,12 +63,21 @@ class HieroEngine(tank.platform.Engine):
         """
         return self._last_clicked_area
     
-    
     def post_app_init(self):
         # create menus
         tk_hiero = self.import_module("tk_hiero")
         self._menu_generator = tk_hiero.MenuGenerator(self)
         self._menu_generator.create_menu()
+
+        def set_project_root(event):
+            """Ensure any new projects get the project root or default startup 
+            projects get the project root set
+            """ 
+            for p in hiero.core.projects():
+                if not p.projectRoot():
+                    self.log_debug("Setting projectRoot on %s to: %s" % (p.name(), self.tank.project_path))
+                    p.setProjectRoot(self.tank.project_path)
+        hiero.core.events.registerInterest('kAfterNewProjectCreated', set_project_root)
 
     def destroy_engine(self):
         self.log_debug("%s: Destroying..." % self)
