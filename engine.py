@@ -95,7 +95,6 @@ class HieroEngine(tank.platform.Engine):
     def log_info(self, msg):
         # ensure the debug log channel is on
         # we do this lazily to reduce amount of noise from hiero
-        hiero.core.log.setLogLevel(hiero.core.log.kInfo)
         hiero.core.log.info("Shotgun: %s" % msg)
 
     def log_warning(self, msg):
