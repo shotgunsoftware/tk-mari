@@ -300,7 +300,7 @@ class AppCommand(object):
         action = menu.addAction(self.name)
         action.setEnabled(enabled)
         if icon:
-            action.setIcon(icon)
+            action.setIcon(QtGui.QIcon(icon))
 
         def handler():
             # populate special action context
