@@ -93,11 +93,22 @@ class HieroEngine(tank.platform.Engine):
             hiero.core.log.debug("Shotgun: %s" % msg)
 
     def log_info(self, msg):
-        # ensure the debug log channel is on
-        # we do this lazily to reduce amount of noise from hiero
+        # 
+        # NOTE! By default, info logging is turned OFF in hiero
+        # meaning that no info messages (nor warning, since they use info to output too)
+        # will be output in the console.
+        # 
+        # in order to have these emitted, we would need to turn them on by doing a 
+        # hiero.core.log.setLogLevel(hiero.core.log.kInfo)
+        #
+        # However this has call been omitted on purpose because too much output 
+        # from hiero to stdout/stderr is causing problems with the browser plugin
+        # causing it to hang or crash. By keeping the info and warning logging off
+        # we are avoiding such hangs and working around this known issue.
         hiero.core.log.info("Shotgun: %s" % msg)
 
     def log_warning(self, msg):
+        # please see note on log_info()
         hiero.core.log.info("Shotgun Warning: %s" % msg)
 
     def log_error(self, msg):
