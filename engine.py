@@ -10,8 +10,8 @@ class MariEngine(tank.platform.Engine):
     def post_app_init(self):
         # create menus
         tk_mari = self.import_module("tk_mari")
-        #self._menu_generator = tk_mari.MenuGenerator(self)
-        #self._menu_generator.create_menu()
+        self._menu_generator = tk_mari.MenuGenerator(self)
+        self._menu_generator.create_menu()
 
     def destroy_engine(self):
         self.log_debug("%s: Destroying..." % self)
