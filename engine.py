@@ -18,13 +18,17 @@ class MariEngine(tank.platform.Engine):
         self._menu_generator.destroy_menu()
 
     def log_debug(self, msg):
-        pass
+        print 'Shotgun Debug: %s' % msg
 
     def log_info(self, msg):
-        pass
+        print 'Shotgun Log: %s' % msg
 
     def log_warning(self, msg):
-        pass
+        msg = 'Shotgun Warning: %s' % msg
+        print msg
+        mari.utils.message(msg)
 
     def log_error(self, msg):
-        pass
+        msg = 'Shotgun Error: %s' % msg
+        print msg
+        mari.utils.message(msg)
