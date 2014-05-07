@@ -26,10 +26,20 @@ class MenuGenerator(object):
 
     def destroy_menu(self):
         mari._menu_commands = {}
+        shotgun_menu = 'Shotgun'
 
-        shotgun_actions = mari.menus.actions('MainWindow', 'Shotgun')
+        ctx = self._engine.context
+        ctx_name = str(ctx)
+        ctx_menu = '%s/%s' % (shotgun_menu, ctx_name)
+
+        context_actions = mari.menus.actions('MainWindow', '%s' % shotgun_menu, '%s' % ctx_name)
+        for action in context_actions:
+            mari.menus.removeAction('MainWindow/%s/%s' % (ctx_menu, action.name()))
+
+        shotgun_actions = mari.menus.actions('MainWindow', shotgun_menu)
         for action in shotgun_actions:
-            mari.menus.removeAction('MainWindow/Shotgun/%s' % action.name())
+            mari.menus.removeAction('MainWindow/%s/%s' % (shotgun_menu, action.name()))
+
 
     def _add_context_menu(self, menu):
         mari._menu_commands = {}
