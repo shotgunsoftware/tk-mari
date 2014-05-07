@@ -17,11 +17,20 @@ class MenuGenerator(object):
         for (cmd_name, cmd_details) in self._engine.commands.items():
             menu_items.append(AppCommand(cmd_name, cmd_details))
 
+        commands_by_app = {}
         for cmd in menu_items:
             if cmd.get_type() == 'context_menu':
                 cmd.add_command_to_menu(context_menu)
             else:
-                cmd.add_command_to_menu(shotgun_menu)
+                app_name = cmd.get_app_name()
+                if app_name is None:
+                    app_name = 'Other Items'
+                if not app_name in commands_by_app:
+                    commands_by_app[app_name] = []
+                commands_by_app[app_name].append(cmd)
+                #cmd.add_command_to_menu(shotgun_menu)
+
+        self._add_app_menu(commands_by_app, shotgun_menu)
 
 
     def destroy_menu(self):
@@ -39,6 +48,17 @@ class MenuGenerator(object):
         shotgun_actions = mari.menus.actions('MainWindow', shotgun_menu)
         for action in shotgun_actions:
             mari.menus.removeAction('MainWindow/%s/%s' % (shotgun_menu, action.name()))
+
+
+    def _add_app_menu(self, commands_by_app, shotgun_menu):
+        for app_name in sorted(commands_by_app.keys()):
+            if len(commands_by_app[app_name]) > 1:
+                menu_name = '%s/%s' % (shotgun_menu, app_name)
+                for cmd in commands_by_app[app_name]:
+                    cmd.add_command_to_menu(menu_name)
+            else:
+                cmd = commands_by_app[app_name][0]
+                cmd.add_command_to_menu(shotgun_menu)
 
 
     def _add_context_menu(self, menu):
