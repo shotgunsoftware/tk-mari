@@ -3,6 +3,9 @@ import sys
 import mari
 from tank.platform.qt import QtGui, QtCore
 
+MENU_NAME = '_tk_mari_menu_commands'
+
+
 class MenuGenerator(object):
     def __init__(self, engine):
         self._engine = engine
@@ -34,7 +37,7 @@ class MenuGenerator(object):
 
 
     def destroy_menu(self):
-        mari._menu_commands = {}
+        setattr(mari, MENU_NAME, {})
         shotgun_menu = 'Shotgun'
 
         ctx = self._engine.context
@@ -62,20 +65,20 @@ class MenuGenerator(object):
 
 
     def _add_context_menu(self, menu):
-        mari._menu_commands = {}
+        setattr(mari, MENU_NAME, {})
         ctx = self._engine.context
         ctx_name = str(ctx)
 
         command_name = 'Jump To File System'
-        mari._menu_commands[command_name] = self._jump_to_fs
-        callback_string = 'mari._menu_commands["%s"]()' % command_name
+        getattr(mari, MENU_NAME)[command_name] = self._jump_to_fs
+        callback_string = 'mari.%s["%s"]()' % (MENU_NAME, command_name)
 
         action = mari.actions.create(command_name, callback_string)
         mari.menus.addAction(action, '%s/%s' % (menu, ctx_name))
 
         command_name = 'Jump To Shotgun'
-        mari._menu_commands[command_name] = self._jump_to_sg
-        callback_string = 'mari._menu_commands["%s"]()' % command_name
+        getattr(mari, MENU_NAME)[command_name] = self._jump_to_sg
+        callback_string = 'mari.%s["%s"]()' % (MENU_NAME, command_name)
 
         action = mari.actions.create(command_name, callback_string)
         mari.menus.addAction(action, '%s/%s' % (menu, ctx_name))
@@ -147,11 +150,11 @@ class AppCommand(object):
 
     def add_command_to_menu(self, menu):
 
-        if not hasattr(mari, '_menu_commands'):
-            mari._menu_commands = {}
+        if not hasattr(mari, MENU_NAME):
+            setattr(mari, MENU_NAME, {})
 
-        mari._menu_commands[self.name] = self.callback
-        callback_string = 'mari._menu_commands["%s"]()' % self.name
+        getattr(mari, MENU_NAME)[self.name] = self.callback
+        callback_string = 'mari.%s["%s"]()' % (MENU_NAME, self.name)
 
         action = mari.actions.create(self.name, callback_string)
         mari.menus.addAction(action, menu)
