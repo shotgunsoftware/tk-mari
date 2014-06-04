@@ -18,7 +18,8 @@ class MenuGenerator(object):
         # now enumerate all items and create menu objects for them
         menu_items = []
         for (cmd_name, cmd_details) in self._engine.commands.items():
-            menu_items.append(AppCommand(cmd_name, cmd_details))
+            if not (cmd_name == 'Shotgun File Manager...' or cmd_name == 'Version up Current Scene...'):
+                menu_items.append(AppCommand(cmd_name, cmd_details))
 
         commands_by_app = {}
         for cmd in menu_items:
