@@ -31,7 +31,6 @@ def bootstrap_sgtk():
     """
     try:
         import sgtk
-        raise Exception ("This is odd!")
     except Exception, e:
         show_warning("Could not import sgtk! Disabling for now: %s" % e)
         return
@@ -57,6 +56,5 @@ def bootstrap_sgtk():
     for var in ["TANK_ENGINE", "TANK_CONTEXT", "TANK_FILE_TO_OPEN"]:
         if var in os.environ:
             del os.environ[var]
-
 
 bootstrap_sgtk()
