@@ -1,34 +1,292 @@
+# Copyright (c) 2014 Shotgun Software Inc.
+# 
+# CONFIDENTIAL AND PROPRIETARY
+# 
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+# Source Code License included in this distribution package. See LICENSE.
+# By accessing, using, copying or modifying this work you indicate your 
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# not expressly granted therein are reserved by Shotgun Software Inc.
+
+"""
+A Toolkit engine for Mari
+"""
+
+import mari
 import mari.utils
+import sgtk
+from sgtk import TankError
 
-import tank
-
-class MariEngine(tank.platform.Engine):
-    
+class MariEngine(sgtk.platform.Engine):
+    """
+    The engine class
+    """
     def init_engine(self):
+        """
+        Engine construction/setup
+        """
         self.log_debug("%s: Initializing..." % self)
     
+    @property
+    def has_ui(self):
+        """
+        Detect and return if mari is not running in terminal mode
+        """        
+        return not mari.app.inTerminalMode()
+    
     def post_app_init(self):
-        # create menus
-        tk_mari = self.import_module("tk_mari")
-        self._menu_generator = tk_mari.MenuGenerator(self)
-        self._menu_generator.create_menu()
+        """
+        Do any initialization after apps have been loaded
+        """
+        if self.has_ui:
+            # create the Shotgun menu
+            tk_mari = self.import_module("tk_mari")
+            self._menu_generator = tk_mari.MenuGenerator(self)
+            self._menu_generator.create_menu()
+            
+        # the engine has been started so check that the current
+        # Mari project has the correct Shotgun metadata assigned
+        self.__update_current_mari_project_context()
+            
+        # connect to Mari project events:
+        mari.utils.connect(mari.projects.opened, self.__on_project_opened)
 
     def destroy_engine(self):
+        """
+        Called when the engine is being destroyed
+        """
         self.log_debug("%s: Destroying..." % self)
-        self._menu_generator.destroy_menu()
+        
+        if self.has_ui:
+            # destroy the menu:
+            self._menu_generator.destroy_menu()
+
+        # disconnect from Mari project events:
+        mari.utils.disconnect(mari.projects.opened, self.__on_project_opened)
+
+    def find_geometry_for_publish(self, sg_publish):
+        """
+        Find the geometry and version info for the specified publish if it exists in the current project
+        
+        :param sg_publish:  The Shotgun publish to find geo for
+        :returns:           Tuple containing the geo and version that match
+                            the publish if found.
+        """
+        tk_mari = self.import_module("tk_mari")
+        geo_mgr = tk_mari.GeometryManager()
+        return geo_mgr.find_geometry_for_publish(sg_publish)
+    
+    def list_geometry(self):
+        """
+        Find all Shotgun aware geometry in the scene.  Any non-Shotgun aware geometry is ignored!
+        
+        :returns:   A list of dictionaries containing the geo together with any Shotgun info
+                    that was found on it
+        """
+        tk_mari = self.import_module("tk_mari")
+        geo_mgr = tk_mari.GeometryManager()
+        return geo_mgr.list_geometry()
+
+    def list_geometry_versions(self, geo):
+        """
+        Find all Shotgun aware versions for the specified geometry.  Any non-Shotgun aware versions are 
+        ignored!
+        
+        :param geo: The Mari GeoEntity to find all versions for
+        :returns:   A list of dictionaries containing the geo_version together with any Shotgun info
+                    that was found on it
+        """
+        tk_mari = self.import_module("tk_mari")
+        geo_mgr = tk_mari.GeometryManager()
+        return geo_mgr.list_geometry_versions(geo)
+    
+    def load_geometry(self, sg_publish, options=None, objects_to_load=None):
+        """
+        Wraps the Mari GeoManager.load() method and additionally tags newly loaded geometry with Shotgun 
+        specific metadata.  See Mari API documentation for more information on GeoManager.load().
+                                
+        :param sg_publish:      The shotgun publish to load
+        :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry
+        :param objects_to_load: [Mari arg] - A list of objects to load from the file
+        :returns:               A list of the loaded GeoEntity instances that were created
+        """
+        tk_mari = self.import_module("tk_mari")
+        geo_mgr = tk_mari.GeometryManager()
+        return geo_mgr.load_geometry(sg_publish, options, objects_to_load)
+
+    def get_shotgun_info(self, mari_entity):
+        """
+        Get all Shotgun info stored with the specified mari entity.
+        
+        :param mari_entity: The mari entity to query metadata from.
+        :returns:           Dictionary containing all Shotgun metadata found
+                            in the Mari entity.        
+        """
+        tk_mari = self.import_module("tk_mari")
+        md_mgr = tk_mari.MetadataManager()
+        return md_mgr.get_metadata(mari_entity)
+    
+    def add_geometry_version(self, geo, sg_publish, options=None):
+        """
+        Wraps the Mari GeoEntity.addVersion() method and additionally tags newly loaded geometry versions 
+        with Shotgun specific metadata. See Mari API documentation for more information on 
+        GeoEntity.addVersion().
+
+        :param geo:             The Mari GeoEntity to add a version to
+        :param sg_publish:      The publish to load as a new version.
+        :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry.  The
+                                options will default to the options that were used to load the current version if
+                                not specified.
+        :returns:               The new GeoEntityVersion instance
+        """
+        tk_mari = self.import_module("tk_mari")
+        geo_mgr = tk_mari.GeometryManager()
+        return geo_mgr.add_geometry_version(geo, sg_publish, options)
+    
+    def create_project(self, name, sg_publishes, channels_to_create, channels_to_import=[], 
+                       project_meta_options=None, objects_to_load=None):
+        """
+        Wraps the Mari ProjectManager.create() method and additionally tags newly created project and all 
+        loaded geometry & versions with Shotgun specific metadata. See Mari API documentation for more 
+        information on ProjectManager.create().
+                                        
+        :param name:                    [Mari arg] - The name to use for the new project
+        :param sg_publishes:            A list of publishes to load into the new project.  At least one publish
+                                        must be specified!
+        :param channels_to_create:      [Mari arg] - A list of channels to create for geometry in the new project
+        :param channels_to_import:      [Mari arg] - A list of channels to import for geometry in the new project
+        :param project_meta_options:    [Mari arg] - A dictionary of project creation meta options - these are
+                                        typically the mesh options used when loading the geometry
+        :param objects_to_load:         [Mari arg] - A list of objects to load from the files
+        :returns:                       The newly created Project instance
+        """
+        tk_mari = self.import_module("tk_mari")
+        proj_mgr = tk_mari.ProjectManager()
+        return proj_mgr.create_project(name, sg_publishes, channels_to_create, channels_to_import, 
+                                       project_meta_options, objects_to_load)
 
     def log_debug(self, msg):
-        print 'Shotgun Debug: %s' % msg
+        """
+        Log a debug message
+        :param msg:    The debug message to log
+        """
+        if not hasattr(self, "_debug_logging"):
+            self._debug_logging = self.get_setting("debug_logging", False)
+        if self._debug_logging:
+            print 'Shotgun Debug: %s' % msg
 
     def log_info(self, msg):
-        print 'Shotgun Log: %s' % msg
+        """
+        Log some info
+        :param msg:    The info message to log
+        """
+        print 'Shotgun Info: %s' % msg
 
     def log_warning(self, msg):
+        """
+        Log a warning
+        :param msg:    The warning message to log
+        """        
         msg = 'Shotgun Warning: %s' % msg
         print msg
-        mari.utils.message(msg)
+        #mari.utils.message(msg)
 
     def log_error(self, msg):
+        """
+        Log an error
+        :param msg:    The error message to log
+        """        
         msg = 'Shotgun Error: %s' % msg
         print msg
         mari.utils.message(msg)
+
+    def __update_current_mari_project_context(self):
+        """
+        Update the current Mari project with the current context so that next time this project is 
+        opened, the work area changes accordingly.
+        
+        Note, currently this will happen every time as long as Shotgun is running so it will update 
+        any opened projects even if they were never previously opened in Shotgun...  This just adds 
+        some metadata to the project though so shouldn't be a big deal!  If it is then we should 
+        make it less automatic.
+        """
+        current_project = mari.projects.current()
+        if not current_project:
+            return
+
+        self.log_debug("Updating the Work Area on the current project to '%s'" % self.context)
+        tk_mari = self.import_module("tk_mari")
+        md_mgr = tk_mari.MetadataManager()
+        md_mgr.set_project_metadata(current_project, self.context)        
+
+    def __on_project_opened(self, opened_project, is_new):
+        """
+        Called when a project is opened in Mari.  This looks for Toolkit metadata on the newly opened 
+        project and if it finds any, it tries to build a new context and restarts the engine with this 
+        new context.
+        
+        :param opened_project:  The mari Project instance for the newly opened project
+        :param is_new:          True if the opened project is a new project
+        """
+        if is_new:
+            # for now, do nothing with new projects.
+            # TODO: should we tag project with metadata?
+            return
+        
+        self.log_debug("Project opened - attempting to set the current Work Area to match...")        
+        
+        # get the context for the project that's been opened
+        # using the metadata stored on the project (if available):
+        tk_mari = self.import_module("tk_mari")
+        md_mgr = tk_mari.MetadataManager()
+        md = md_mgr.get_project_metadata(opened_project)
+        if not md:
+            # This project has never been opened with Toolkit running before
+            # so don't need to do anything! 
+            self.log_debug("Work area unchanged - the opened project is not Shotgun aware!")
+            return
+        
+        # try to determine the project context from the metadata:
+        ctx_entity = None
+        if md.get("task_id"):
+            ctx_entity = {"type":"Task", "id":md["task_id"]}
+        elif md.get("entity_id") and md.get("entity_type"):
+            ctx_entity = {"type":md["entity_type"], "id":md["entity_id"]}
+        elif md.get("project_id"):
+            ctx_entity = {"type":"Project", "id":md["project_id"]}
+        else:
+            # failed to determine the context for the project!
+            self.log_debug("Work area unchanged - failed to determine a context for the opened project!")
+            return
+        
+        # get the context from the context entity:
+        ctx = None
+        try:
+            ctx = self.sgtk.context_from_entity(ctx_entity["type"], ctx_entity["id"])
+        except TankError, e:
+            self.log_error("Work area unchanged - Failed to create context from '%s %s': %s" 
+                           % (ctx_entity["type"], ctx_entity["id"], e))
+            return
+
+        print ctx
+
+        if ctx == self.context:
+            # nothing to do - context is the same!
+            return
+        
+        # The context for project is different so restart engine
+        # with this context:        
+        try:
+            self.log_debug("Restarting the engine for Work Area: %s" % ctx)
+            
+            # stop current engine:            
+            self.destroy()
+                
+            # start new engine with the new context:
+            sgtk.platform.start_engine(self.name, ctx.sgtk, ctx)
+        except TankError, e:
+            self.log_error("Failed to start Shotgun engine for Work Area %s: %s" % (ctx, e))
+        except Exception, e:
+            self.log_exception("Failed to start Shotgun engine for Work Area %s" % ctx)
+
+

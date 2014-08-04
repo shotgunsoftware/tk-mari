@@ -12,18 +12,3 @@ configuration:
         description: Controls whether debug messages should be emitted to the logger
         default_value: false
 
-    menu_favourites:
-        type: list
-        description: "Controls the favourites section on the main menu. This is a list
-                     and each menu item is a dictionary with keys app_instance and name.
-                     The app_instance parameter connects this entry to a particular
-                     app instance defined in the environment configuration file. The name
-                     is a menu name to make a favourite. requires_selection will disable the
-                     menu item when there are no items selected in the view."
-        allows_empty: True
-        values:
-            type: dict
-            items:
-                name: { type: str }
-                app_instance: { type: str }
-
