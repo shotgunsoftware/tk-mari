@@ -218,14 +218,28 @@ class MenuGenerator(object):
         """
         ctx = self._engine.context
         ctx_name = str(ctx)
-        ctx_menu_path = "%s/%s" % (shotgun_menu, ctx_name)
+        
+        # Because there is currently no API for removing empty sub-menus (see foundry
+        # issue #2014080310000042) it's not a good idea to create the normal work
+        # are sub-menu as switching context will result in the menu being confusing
+        # with multiple context sub-menus all with different work areas!
+        # Instead, we create a single 'Current Work Area' menu and add an item under
+        # this to describe the work area that we can remove.
+        ctx_menu = "%s/%s" % (shotgun_menu, "Current Work Area")
+        action = mari.actions.create(ctx_name, "")
+        mari.menus.addAction(action, ctx_menu)
+        mari.menus.addSeparator(ctx_menu)
 
+        # When this is possible, the context menu should be created with the context
+        # name in-line with the rest of the engines:
+        # ctx_menu = "%s/%s" % (shotgun_menu, ctx_name)
+        
         action = self.__action_factory.create_action("Jump To File System", self._jump_to_fs)
-        mari.menus.addAction(action, ctx_menu_path)
+        mari.menus.addAction(action, ctx_menu)
         action = self.__action_factory.create_action("Jump To Shotgun", self._jump_to_sg)
-        mari.menus.addAction(action, ctx_menu_path)
+        mari.menus.addAction(action, ctx_menu)
 
-        return ctx_menu_path
+        return ctx_menu
 
 class AppCommand(object):
     """
