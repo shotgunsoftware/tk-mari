@@ -15,6 +15,8 @@ Logic to populate the Shotgun menu in Mari
 import os
 import sys
 import mari
+
+import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
 class ActionFactory(object):

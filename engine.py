@@ -26,8 +26,9 @@ class MariEngine(sgtk.platform.Engine):
         """
         self.log_debug("%s: Initializing..." % self)
         
-        tk_mari = self.import_module("tk_mari")
-        self.util = tk_mari.util
+        # this seems to cause the engine to fail to start!
+        #tk_mari = self.import_module("tk_mari")
+        #self.util = tk_mari.util
     
     @property
     def has_ui(self):
@@ -86,7 +87,8 @@ class MariEngine(sgtk.platform.Engine):
         """
         """
         # get metadata from project:
-        md = self.util.get_project_metadata(mari_project)
+        tk_mari = self.import_module("tk_mari")
+        md = tk_mari.util.get_project_metadata(mari_project)
         if not md:
             # this project has never been opened with Toolkit running before!
             return
