@@ -8,6 +8,6 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
-from . import util
-from .menu_generation import MenuGenerator
-
+from .metadata import set_project_metadata, get_project_metadata
+from .metadata import set_geo_metadata, get_geo_metadata
+from .metadata import set_geo_version_metadata, get_geo_version_metadata
