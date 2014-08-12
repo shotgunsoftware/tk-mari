@@ -21,18 +21,17 @@ class MariEngine(sgtk.platform.Engine):
     """
     The engine class
     """
-    def init_engine(self):
+    def pre_app_init(self):
         """
-        Engine construction/setup
+        Engine construction/setup done before any apps are initialized
         """
         self.log_debug("%s: Initializing..." % self)
     
-    @property
-    def has_ui(self):
-        """
-        Detect and return if mari is not running in terminal mode
-        """        
-        return not mari.app.inTerminalMode()
+        # cache handles to the various manager instances:
+        tk_mari = self.import_module("tk_mari")
+        self.__geometry_mgr = tk_mari.GeometryManager()
+        self.__project_mgr = tk_mari.ProjectManager()
+        self.__metadata_mgr = tk_mari.MetadataManager()
     
     def post_app_init(self):
         """
@@ -44,9 +43,17 @@ class MariEngine(sgtk.platform.Engine):
             self._menu_generator = tk_mari.MenuGenerator(self)
             self._menu_generator.create_menu()
             
-        # the engine has been started so check that the current
-        # Mari project has the correct Shotgun metadata assigned
-        self.__update_current_mari_project_context()
+        # Update the current Mari project with the current context so that next time this project is 
+        # opened, the work area changes accordingly.
+        # 
+        # Note, currently this will happen every time as long as Shotgun is running so it will update 
+        # any opened projects even if they were never previously opened in Shotgun...  This just adds 
+        # some metadata to the project though so shouldn't be a big deal!  If it is then we should 
+        # make it less automatic.
+        current_project = mari.projects.current()
+        if current_project:
+            self.log_debug("Updating the Work Area on the current project to '%s'" % self.context)
+            self.__metadata_mgr.set_project_metadata(current_project, self.context)
             
         # connect to Mari project events:
         mari.utils.connect(mari.projects.opened, self.__on_project_opened)
@@ -64,6 +71,13 @@ class MariEngine(sgtk.platform.Engine):
         # disconnect from Mari project events:
         mari.utils.disconnect(mari.projects.opened, self.__on_project_opened)
 
+    @property
+    def has_ui(self):
+        """
+        Detect and return if mari is not running in terminal mode
+        """        
+        return not mari.app.inTerminalMode()
+
     def find_geometry_for_publish(self, sg_publish):
         """
         Find the geometry and version info for the specified publish if it exists in the current project
@@ -72,9 +86,7 @@ class MariEngine(sgtk.platform.Engine):
         :returns:           Tuple containing the geo and version that match
                             the publish if found.
         """
-        tk_mari = self.import_module("tk_mari")
-        geo_mgr = tk_mari.GeometryManager()
-        return geo_mgr.find_geometry_for_publish(sg_publish)
+        return self.__geometry_mgr.find_geometry_for_publish(sg_publish)
     
     def list_geometry(self):
         """
@@ -83,9 +95,7 @@ class MariEngine(sgtk.platform.Engine):
         :returns:   A list of dictionaries containing the geo together with any Shotgun info
                     that was found on it
         """
-        tk_mari = self.import_module("tk_mari")
-        geo_mgr = tk_mari.GeometryManager()
-        return geo_mgr.list_geometry()
+        return self.__geometry_mgr.list_geometry()
 
     def list_geometry_versions(self, geo):
         """
@@ -96,9 +106,7 @@ class MariEngine(sgtk.platform.Engine):
         :returns:   A list of dictionaries containing the geo_version together with any Shotgun info
                     that was found on it
         """
-        tk_mari = self.import_module("tk_mari")
-        geo_mgr = tk_mari.GeometryManager()
-        return geo_mgr.list_geometry_versions(geo)
+        return self.__geometry_mgr.list_geometry_versions(geo)
     
     def load_geometry(self, sg_publish, options=None, objects_to_load=None):
         """
@@ -110,9 +118,7 @@ class MariEngine(sgtk.platform.Engine):
         :param objects_to_load: [Mari arg] - A list of objects to load from the file
         :returns:               A list of the loaded GeoEntity instances that were created
         """
-        tk_mari = self.import_module("tk_mari")
-        geo_mgr = tk_mari.GeometryManager()
-        return geo_mgr.load_geometry(sg_publish, options, objects_to_load)
+        return self.__geometry_mgr.load_geometry(sg_publish, options, objects_to_load)
 
     def get_shotgun_info(self, mari_entity):
         """
@@ -122,9 +128,7 @@ class MariEngine(sgtk.platform.Engine):
         :returns:           Dictionary containing all Shotgun metadata found
                             in the Mari entity.        
         """
-        tk_mari = self.import_module("tk_mari")
-        md_mgr = tk_mari.MetadataManager()
-        return md_mgr.get_metadata(mari_entity)
+        return self.__metadata_mgr.get_metadata(mari_entity)
     
     def add_geometry_version(self, geo, sg_publish, options=None):
         """
@@ -139,9 +143,7 @@ class MariEngine(sgtk.platform.Engine):
                                 not specified.
         :returns:               The new GeoEntityVersion instance
         """
-        tk_mari = self.import_module("tk_mari")
-        geo_mgr = tk_mari.GeometryManager()
-        return geo_mgr.add_geometry_version(geo, sg_publish, options)
+        return self.__geometry_mgr.add_geometry_version(geo, sg_publish, options)
     
     def create_project(self, name, sg_publishes, channels_to_create, channels_to_import=[], 
                        project_meta_options=None, objects_to_load=None):
@@ -160,9 +162,7 @@ class MariEngine(sgtk.platform.Engine):
         :param objects_to_load:         [Mari arg] - A list of objects to load from the files
         :returns:                       The newly created Project instance
         """
-        tk_mari = self.import_module("tk_mari")
-        proj_mgr = tk_mari.ProjectManager()
-        return proj_mgr.create_project(name, sg_publishes, channels_to_create, channels_to_import, 
+        return self.__project_mgr.create_project(name, sg_publishes, channels_to_create, channels_to_import, 
                                        project_meta_options, objects_to_load)
 
     def log_debug(self, msg):
@@ -200,25 +200,6 @@ class MariEngine(sgtk.platform.Engine):
         print msg
         mari.utils.message(msg)
 
-    def __update_current_mari_project_context(self):
-        """
-        Update the current Mari project with the current context so that next time this project is 
-        opened, the work area changes accordingly.
-        
-        Note, currently this will happen every time as long as Shotgun is running so it will update 
-        any opened projects even if they were never previously opened in Shotgun...  This just adds 
-        some metadata to the project though so shouldn't be a big deal!  If it is then we should 
-        make it less automatic.
-        """
-        current_project = mari.projects.current()
-        if not current_project:
-            return
-
-        self.log_debug("Updating the Work Area on the current project to '%s'" % self.context)
-        tk_mari = self.import_module("tk_mari")
-        md_mgr = tk_mari.MetadataManager()
-        md_mgr.set_project_metadata(current_project, self.context)        
-
     def __on_project_opened(self, opened_project, is_new):
         """
         Called when a project is opened in Mari.  This looks for Toolkit metadata on the newly opened 
@@ -237,9 +218,7 @@ class MariEngine(sgtk.platform.Engine):
         
         # get the context for the project that's been opened
         # using the metadata stored on the project (if available):
-        tk_mari = self.import_module("tk_mari")
-        md_mgr = tk_mari.MetadataManager()
-        md = md_mgr.get_project_metadata(opened_project)
+        md = self.__metadata_mgr.get_project_metadata(opened_project)
         if not md:
             # This project has never been opened with Toolkit running before
             # so don't need to do anything! 
@@ -267,8 +246,6 @@ class MariEngine(sgtk.platform.Engine):
             self.log_error("Work area unchanged - Failed to create context from '%s %s': %s" 
                            % (ctx_entity["type"], ctx_entity["id"], e))
             return
-
-        print ctx
 
         if ctx == self.context:
             # nothing to do - context is the same!

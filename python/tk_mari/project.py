@@ -86,7 +86,6 @@ class ProjectManager(object):
                                  project_meta_options = project_meta_options, 
                                  objects_to_load = objects_to_load)
         except Exception, e:
-            engine.log_exception("eh")
             raise TankError("Failed to create new project: %s" % e)        
         
         # make sure that the current project is the one we created:
