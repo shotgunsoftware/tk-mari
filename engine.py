@@ -16,6 +16,7 @@ import mari
 import mari.utils
 import sgtk
 from sgtk import TankError
+import os
 
 class MariEngine(sgtk.platform.Engine):
     """
@@ -26,6 +27,34 @@ class MariEngine(sgtk.platform.Engine):
         Engine construction/setup done before any apps are initialized
         """
         self.log_debug("%s: Initializing..." % self)
+    
+        # check that this version of Mari is supported:
+        MIN_VERSION = (2,6) # completely unsupported below this!
+        MAX_VERSION = (2,6) # untested above this so display a warning
+        
+        mari_version = mari.app.version()
+        if (mari_version.major() < MIN_VERSION[0] 
+            or (mari_version.major() == MIN_VERSION[0] and mari_version.minor() < MIN_VERSION[1])):
+            # this is a completely unsupported version of Mari!
+            raise TankError("This version of Mari (%d.%dv%d) is not supported by Shotgun Toolkit.  The"
+                            "minimum required version is 2.6v1." 
+                            % (mari_version.major(), mari_version.minor(), mari_version.revision()))
+        elif (mari_version.major() > MAX_VERSION[0] 
+              or (mari_version.major() == MAX_VERSION[0] and mari_version.minor() > MAX_VERSION[1])):
+            # this is an untested version of Mari
+            msg = ("The Shotgun Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
+                   "You can continue to use the Toolkit but you may experience bugs or "
+                   "instability.  Please report any issues you see to toolkitsupport@shotgunsoftware.com" 
+                   % (mari_version.major(), mari_version.minor(), mari_version.revision()))
+            
+            if (self.has_ui 
+                and "SGTK_MARI_VERSION_WARNING_SHOWN" not in os.environ
+                and mari_version.major() >= self.get_setting("compatibility_dialog_min_version")):
+                # show the warning dialog the first time:
+                mari.utils.message(msg, "Shotgun")
+                os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"         
+            
+            self.log_warning(msg)            
     
         # cache handles to the various manager instances:
         tk_mari = self.import_module("tk_mari")
@@ -82,9 +111,9 @@ class MariEngine(sgtk.platform.Engine):
         """
         Find the geometry and version info for the specified publish if it exists in the current project
         
-        :param sg_publish:  The Shotgun publish to find geo for
-        :returns:           Tuple containing the geo and version that match
-                            the publish if found.
+        :param sg_publish:  The Shotgun publish to find geo for.  This is a Shotgun entity dictionary
+                            containing at least the entity "type" and "id".
+        :returns:           Tuple containing the geo and version that match the publish if found.
         """
         return self.__geometry_mgr.find_geometry_for_publish(sg_publish)
     
@@ -113,7 +142,8 @@ class MariEngine(sgtk.platform.Engine):
         Wraps the Mari GeoManager.load() method and additionally tags newly loaded geometry with Shotgun 
         specific metadata.  See Mari API documentation for more information on GeoManager.load().
                                 
-        :param sg_publish:      The shotgun publish to load
+        :param sg_publish:      The shotgun publish to load.  This should be a Shotgun entity dictionary 
+                                containing at least the entity "type" and "id".
         :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry
         :param objects_to_load: [Mari arg] - A list of objects to load from the file
         :returns:               A list of the loaded GeoEntity instances that were created
@@ -137,7 +167,8 @@ class MariEngine(sgtk.platform.Engine):
         GeoEntity.addVersion().
 
         :param geo:             The Mari GeoEntity to add a version to
-        :param sg_publish:      The publish to load as a new version.
+        :param sg_publish:      The publish to load as a new version.  This should be a Shotgun entity dictionary 
+                                containing at least the entity "type" and "id".
         :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry.  The
                                 options will default to the options that were used to load the current version if
                                 not specified.
@@ -154,7 +185,8 @@ class MariEngine(sgtk.platform.Engine):
                                         
         :param name:                    [Mari arg] - The name to use for the new project
         :param sg_publishes:            A list of publishes to load into the new project.  At least one publish
-                                        must be specified!
+                                        must be specified!  Each entry in the list should be a Shotgun entity
+                                        dictionary containing at least the entity "type" and "id".
         :param channels_to_create:      [Mari arg] - A list of channels to create for geometry in the new project
         :param channels_to_import:      [Mari arg] - A list of channels to import for geometry in the new project
         :param project_meta_options:    [Mari arg] - A dictionary of project creation meta options - these are
