@@ -19,7 +19,7 @@ import os
 import mari
 
 from .metadata import MetadataManager
-from .utils import update_publish_records
+from .utils import update_publish_records, get_publish_type_field
 
 class GeometryManager(object):
     """
@@ -33,33 +33,25 @@ class GeometryManager(object):
     
     def find_geometry_for_publish(self, sg_publish):
         """
-        Find the geometry and version info for the specified publish
-        if it exists in the current project
+        Find the geometry and version instances for the specified publish if it exists in 
+        the current project
         
-        :param sg_publish:  The Shotgun publish to find geo for
-        :returns:           Tuple containing the geo and version that match
-                            the publish if found.
+        :param sg_publish:  The Shotgun publish to find geo for.  This should be a Shotgun 
+                            entity dictionary containing at least the entity "type" and "id".
+        :returns:           Tuple containing the geo and version that match the publish 
+                            if found.
         """
         engine = sgtk.platform.current_bundle()
         
         # ensure that sg_publish contains the information we need:
-        update_publish_records([sg_publish])
-        
-        # pull some useful info from the publish
-        publish_entity = sg_publish.get("entity")
-        publish_task = sg_publish.get("task")
-        publish_path = self.__get_publish_path(sg_publish)
-        if not publish_path:
-            raise TankError("Unable to find geometry without a valid publish path!")
-        
-        # we'll need a template for this path so that we can compare path fields:
-        publish_template = engine.sgtk.template_from_path(publish_path)
-        publish_path_fields = publish_template.get_fields(publish_path)
-        # reset version to 0 so when we compare it later it's ignored:
-        publish_path_fields["version"] = 0
+        publish_type_field = get_publish_type_field()
+        update_publish_records([sg_publish], ["project", "entity", "task", "name", publish_type_field])
+        publish_entity = sg_publish["entity"]
+        publish_task = sg_publish["task"]
         
         # enumerate through all geometry in project that has Shotgun metadata:
         found_geo = None
+        sg_publish_version_ids = None
         for geo, entity, task in [(g.get("geo"), g.get("entity"), g.get("task")) for g in self.list_geometry()]:
             if not geo:
                 continue
@@ -78,24 +70,40 @@ class GeometryManager(object):
                 geo_version = version_item.get("geo_version")
                 if not geo_version:
                     continue
-                geo_version_path = version_item.get("path")
                 
-                if geo_version_path == publish_path:
+                geo_version_publish_id = version_item.get("publish_id")
+                if geo_version_publish_id == None:
+                    # can't do much without a publish id!
+                    continue
+                
+                if geo_version_publish_id == sg_publish["id"]:
                     # perfect match!
                     return (geo, geo_version)
                 elif not matches_geo:
-                    # didn't find an exact match so lets see if everything apart from the
-                    # version in the path match instead:
-                    try:
-                        fields = publish_template.get_fields(geo_version_path)
-                        # reset version to 0:
-                        fields["version"] = 0
-                        if fields == publish_path_fields:
-                            # found a matching path with just a different version...
-                            matches_geo = True
-                    except TankError:
-                        # ignore as it means the template didn't match
-                        pass
+                    # didn't find an exact match so lets see if this is
+                    # is a different version of the publish
+                    if sg_publish_version_ids == None:
+                        # get a list of publish versions from Shotgun that match sg_publish:
+                        filters = [["project", "is", sg_publish["project"]]]
+                        if publish_entity:
+                            filters.append(["entity", "is", publish_entity])
+                        if publish_task:
+                            filters.append(["task", "is", publish_task])
+                        if sg_publish["name"]:
+                            filters.append(["name", "is", sg_publish["name"]])
+                        if sg_publish[publish_type_field]:
+                            filters.append([publish_type_field, "is", sg_publish[publish_type_field]])
+                        sg_res = []
+                        try:
+                            sg_res = engine.shotgun.find(sg_publish["type"], filters, [])
+                        except Exception, e:
+                            raise TankError("Failed to query publish versions for publish '%s': %s" 
+                                            % (sg_publish["name"], e))
+                        sg_publish_version_ids = set([res["id"] for res in sg_res])
+                        
+                    if geo_version_publish_id in sg_publish_version_ids:
+                        # found a matching publish that just differs by version
+                        matches_geo = True
                 
             if matches_geo:
                 # didn't find an exact match for the version but did find the geo
@@ -148,7 +156,8 @@ class GeometryManager(object):
         Wraps the Mari GeoManager.load() method and additionally tags newly loaded geometry with Shotgun 
         specific metadata.  See Mari API documentation for more information on GeoManager.load().
                                 
-        :param sg_publish:      The shotgun publish to load
+        :param sg_publish:      The shotgun publish to load.  This should be a Shotgun entity
+                                dictionary containing at least the entity "type" and "id".
         :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry
         :param objects_to_load: [Mari arg] - A list of objects to load from the file
         :returns:               A list of the loaded GeoEntity instances that were created
@@ -183,7 +192,8 @@ class GeometryManager(object):
         GeoEntity.addVersion().
 
         :param geo:             The Mari GeoEntity to add a version to
-        :param sg_publish:      The publish to load as a new version.
+        :param sg_publish:      The publish to load as a new version.  This should be a Shotgun entity
+                                dictionary containing at least the entity "type" and "id".
         :param options:         [Mari arg] - Options to be passed to the file loader when loading the geometry.  The
                                 options will default to the options that were used to load the current version if
                                 not specified.
@@ -230,7 +240,8 @@ class GeometryManager(object):
 
         :param geo:             The geometry to initialise
         :param publish_path:    The path of the publish this geometry was loaded from
-        :param sg_publish:      The Shotgun publish record for this geometry
+        :param sg_publish:      The Shotgun publish record for this geometry.  This should be a Shotgun
+                                entity dictionary containing at least the entity "type" and "id".
         """
         # determine the name to use:
         publish_name = sg_publish.get("name")
@@ -281,7 +292,8 @@ class GeometryManager(object):
 
         :param geo_version:     The geometry version to initialise
         :param publish_path:    The path of the publish this geometry was loaded from
-        :param sg_publish:      The Shotgun publish record for this geometry version      
+        :param sg_publish:      The Shotgun publish record for this geometry version.  This should be a 
+                                Shotgun entity dictionary containing at least the entity "type" and "id".
         """
         sg_publish_id = sg_publish.get("id")
         sg_version = sg_publish.get("version_number")
@@ -299,7 +311,7 @@ class GeometryManager(object):
         Get the publish path from a Shotgun publish record.
         # (TODO) - move this to use a centralized method in core
         
-        :param sg_publish:   The publish to extract the path from
+        :param sg_publish:   The publish to extract the path from.
         :returns:            The path if found or None
         """
         return sg_publish.get("path", {}).get("local_path")

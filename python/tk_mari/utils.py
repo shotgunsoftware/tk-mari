@@ -11,6 +11,20 @@
 import sgtk
 from sgtk import TankError
 
+def get_publish_type_field():
+    """
+    Get the field name to use when querying the published file type name
+    for a Shotgun published file entity.
+
+    :returns:   The name of the field to use
+    """
+    engine = sgtk.platform.current_bundle()
+    publish_entity_type = sgtk.util.get_published_file_entity_type(engine.sgtk)
+    if publish_entity_type == "PublishedFile":
+        return "published_file_type.PublishedFileType.code"
+    else:
+        return "tank_type.TankType.code"
+
 def update_publish_records(sg_publishes, min_fields = None):
     """
     If needed, update Shotgun publish records with fields required for
@@ -24,7 +38,7 @@ def update_publish_records(sg_publishes, min_fields = None):
     engine = sgtk.platform.current_bundle()
         
     # ensure that all sg_publishes contain the information we need:
-    required_fields = set(["name", "version", "path", "project", "entity", "task"])
+    required_fields = set(["name", "version", "path", "project", "entity", "task", get_publish_type_field()])
     if min_fields:
         required_fields.update(min_fields)
     else:
