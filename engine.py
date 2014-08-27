@@ -29,7 +29,7 @@ class MariEngine(sgtk.platform.Engine):
         self.log_debug("%s: Initializing..." % self)
     
         # check that this version of Mari is supported:
-        MIN_VERSION = (2,6) # completely unsupported below this!
+        MIN_VERSION = (2,6,1) # completely unsupported below this!
         MAX_VERSION = (2,6) # untested above this so display a warning
         
         mari_version = mari.app.version()
@@ -37,8 +37,9 @@ class MariEngine(sgtk.platform.Engine):
             or (mari_version.major() == MIN_VERSION[0] and mari_version.minor() < MIN_VERSION[1])):
             # this is a completely unsupported version of Mari!
             raise TankError("This version of Mari (%d.%dv%d) is not supported by Shotgun Toolkit.  The"
-                            "minimum required version is 2.6v1." 
-                            % (mari_version.major(), mari_version.minor(), mari_version.revision()))
+                            "minimum required version is %d.%dv%d." 
+                            % (mari_version.major(), mari_version.minor(), mari_version.revision(),
+                               MIN_VERSION[0], MIN_VERSION[1], MIN_VERSION[2]))
         elif (mari_version.major() > MAX_VERSION[0] 
               or (mari_version.major() == MAX_VERSION[0] and mari_version.minor() > MAX_VERSION[1])):
             # this is an untested version of Mari
