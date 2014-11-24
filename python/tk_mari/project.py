@@ -79,12 +79,12 @@ class ProjectManager(object):
         # create the project with the first geometry specified:
         try:
             engine.log_debug("Creating a new project called: %s" % name)
-            mari.projects.create(name,                  # name = name
-                                 publish_path,          # mesh_paths = publish_path
-                                 channels_to_create,    # channels_to_create = channels_to_create 
-                                 channels_to_import = channels_to_import,
-                                 project_meta_options = project_meta_options, 
-                                 objects_to_load = objects_to_load)
+            mari.projects.create(name,
+                                 publish_path,
+                                 channels_to_create, 
+                                 channels_to_import,
+                                 project_meta_options, 
+                                 objects_to_load)
         except Exception, e:
             raise TankError("Failed to create new project: %s" % e)        
         

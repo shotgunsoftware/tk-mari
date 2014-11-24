@@ -173,9 +173,12 @@ class GeometryManager(object):
         # load everything:
         new_geo = []
         try:
-            new_geo = mari.geo.load(publish_path,   # path = publish_path, 
-                                    options = options, 
-                                    objects_to_load = objects_to_load)
+            # (AD) Note - passing options as a named parameter (e.g. options=options) seems to
+            # stop any channels specified in the options list from being created so just pass
+            # as indexed parameters instead!
+            new_geo = mari.geo.load(publish_path,
+                                    options, 
+                                    objects_to_load)
         except Exception, e:
             raise TankError("Failed to load published geometry from '%s': %s" % (publish_path, e))       
         
@@ -216,9 +219,9 @@ class GeometryManager(object):
             
         # add the version
         try: 
-            geo.addVersion(publish_path, # paths = publish_path,
-                           version_name, # name = version_name, 
-                           options = options)
+            geo.addVersion(publish_path,
+                           version_name, 
+                           options)
         except Exception, e:
             raise TankError("Failed to load published geometry version from '%s': %s" % (publish_path, e))           
     
