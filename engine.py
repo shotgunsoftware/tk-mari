@@ -45,7 +45,7 @@ class MariEngine(sgtk.platform.Engine):
             # this is an untested version of Mari
             msg = ("The Shotgun Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
                    "You can continue to use the Toolkit but you may experience bugs or "
-                   "instability.  Please report any issues you see to toolkitsupport@shotgunsoftware.com" 
+                   "instability.  Please report any issues you see to support@shotgunsoftware.com" 
                    % (mari_version.major(), mari_version.minor(), mari_version.revision()))
             
             if (self.has_ui 
