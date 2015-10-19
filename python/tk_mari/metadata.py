@@ -45,7 +45,6 @@ for geo in mari.geo.list():
 """    
 
 import mari
-import PythonQt
 
 class MetadataManager(object):
     """
@@ -98,11 +97,21 @@ class MetadataManager(object):
         :returns:           Dictionary containing all Shotgun metadata found
                             in the Mari entity.
         """
+
+        if mari.app.version().major() >= 3:
+            geoEntityType = mari.GeoEntity 
+            projectEntityType = mari.Project
+        else:
+            # version 2
+            import PythonQt 
+            geoEntityType = PythonQt.private.GeoEntityVersion
+            projectEntityType = PythonQt.private.Project
+
         if isinstance(mari_entity, mari.GeoEntity):
             return self.get_geo_metadata(mari_entity)
-        elif isinstance(mari_entity, PythonQt.private.GeoEntityVersion):
+        elif isinstance(mari_entity, geoEntityType):
             return self.get_geo_version_metadata(mari_entity)
-        elif isinstance(mari_entity, PythonQt.private.Project):
+        elif isinstance(mari_entity, projectEntityType):
             return self.get_project_metadata(mari_entity)
         else:
             # metadata on other entity types isn't supported!
