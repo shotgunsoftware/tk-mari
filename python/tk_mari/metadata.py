@@ -97,6 +97,12 @@ class MetadataManager(object):
         :returns:           Dictionary containing all Shotgun metadata found
                             in the Mari entity.
         """
+        # If we're given nothing, then we don't have any metadata
+        # to return. This is most likely the case due to an empty
+        # session of Mari running. Once a project file has been
+        # opened this is unlikely to happen.
+        if mari_entity is None:
+            return {}
 
         if mari.app.version().major() >= 3:
             geoEntityType = mari.GeoEntity 
