@@ -108,10 +108,17 @@ class MetadataManager(object):
             geoEntityType = mari.GeoEntity 
             projectEntityType = mari.Project
         else:
-            # version 2
-            import PythonQt 
-            geoEntityType = PythonQt.private.GeoEntityVersion
-            projectEntityType = PythonQt.private.Project
+            # Mari pre-3.0 release. If we fail on the import or
+            # when referencing the geo and project entity classes
+            # then we're likely in an empty Mari session with no
+            # active project, in which case we have no metadata
+            # and can return an empty dict.
+            try:
+                import PythonQt 
+                geoEntityType = PythonQt.private.GeoEntityVersion
+                projectEntityType = PythonQt.private.Project
+            except (ImportError, AttributeError):
+                return {}
 
         if isinstance(mari_entity, mari.GeoEntity):
             return self.get_geo_metadata(mari_entity)
