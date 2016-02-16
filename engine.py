@@ -55,7 +55,10 @@ class MariEngine(sgtk.platform.Engine):
                 mari.utils.message(msg, "Shotgun")
                 os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"         
             
-            self.log_warning(msg)            
+            self.log_warning(msg)
+
+        self.log_user_attribute_metric("Mari version",
+            "%s.%s.%s" % (mari_version.major(), mari_version.minor(), mari_version.revision()))
     
         # cache handles to the various manager instances:
         tk_mari = self.import_module("tk_mari")
