@@ -35,7 +35,7 @@ class MariEngine(sgtk.platform.Engine):
                 "version": "1.2.3",
             }
 
-        The returned dictionary is of following form on an error occurs preventing
+        The returned dictionary is of following form on an error preventing
         the version identification.
 
             {
