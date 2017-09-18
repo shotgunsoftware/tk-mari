@@ -26,9 +26,22 @@ class MariEngine(sgtk.platform.Engine):
     @property
     def host_info(self):
         """
-        :returns: A {"name": application name, "version": application version}
-                  dictionary with informations about the application hosting this
-                  engine.
+        :returns: A dictionary with information about the application hosting this engine.
+
+        The returned dictionary is of the following form on success:
+
+            {
+                "name": "Mari",
+                "version": "1.2.3",
+            }
+
+        The returned dictionary is of following form on an error occurs preventing
+        the version identification.
+
+            {
+                "name": "Mari",
+                "version: "unknown"
+            }
         """
         host_info = {"name": "Mari", "version": "unknown"}
 
