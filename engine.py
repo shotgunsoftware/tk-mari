@@ -26,16 +26,11 @@ class MariEngine(sgtk.platform.Engine):
     @property
     def host_info(self):
         """
-        :returns: A {"name": application name, "version": application version, "stage": application build info}
+        :returns: A {"name": application name, "version": application version}
                   dictionary with informations about the application hosting this
                   engine.
-
-        NOTE:
-
-        From installed documentation (Mac)
-        file:///Applications/Mari3.3v1/Mari3.3v1.app/Contents/pydoc/mari.AppVersion-class.html
         """
-        host_info = {"name": "Mari", "version": "unknown", "stage": "unknown"}
+        host_info = {"name": "Mari", "version": "unknown"}
 
         try:
             mari_version = mari.app.version()
@@ -45,10 +40,6 @@ class MariEngine(sgtk.platform.Engine):
                 mari_version.minor(),
                 mari_version.revision()
             )
-
-            # The 'stage' method returns a string such as
-            # 'mari.Mari.AppVersion.Stage.RELEASE'
-            host_info["stage"] = mari_version.stage()
 
         except:
             # Fallback to initialization value above
