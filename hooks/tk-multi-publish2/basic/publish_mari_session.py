@@ -210,8 +210,6 @@ class MariSessionPublishPlugin(HookBaseClass):
             if not layer:
                 self.logger.warning("Failed to find layer for channel: %s Validation failed." % layer_name)
                 return False
-
-
         return True
 
     def publish(self, settings, item):

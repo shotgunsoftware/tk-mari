@@ -15,10 +15,6 @@ import sgtk
 import tempfile
 import uuid
 
-from tank import TankError
-from tank import TemplatePath
-from tank.templatekey import (IntegerKey, SequenceKey, StringKey)
-
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
@@ -78,54 +74,11 @@ class MariSessionCollector(HookBaseClass):
         :param parent_item: Root item instance
         """
 
-        # create an item representing the current mari session
-        channel_item, layer_item = self.collect_current_mari_session(settings, parent_item)
-
-        self._collect_files(settings, channel_item, layer_item)
-
-    def collect_current_mari_session(self, settings, parent_item):
-        """
-        Creates an item that represents the current mari session.
-
-        :param dict settings: Configured settings for this collector
-        :param parent_item: Parent Item instance
-        :returns: Items of type mari.channels and mari.layers
-        """
-
         if not mari.projects.current():
             self.logger.warning("You must be in an open Mari project to be able to publish!")
+            return
 
         publisher = self.parent
-
-        # create the channel item for the publish hierarchy
-        channel_item = parent_item.create_item(
-            "mari.channels",
-            "Publish flattened channels",
-            "Texture Channels",
-        )
-        # get the icon path to display for this item
-        icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "mari_channel_publish.png"
-        )
-        channel_item.set_icon_from_path(icon_path)
-
-        # create the layer item for the publish hierarchy
-        layer_item = parent_item.create_item(
-            "mari.layers",
-            "Publish individual layers for channels",
-            "Texture Channel Layers",
-        )
-        # get the icon path to display for this item
-        icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "mari_layer_publish.png"
-        )
-        layer_item.set_icon_from_path(icon_path)
 
         # if a work file template is defined, add it to the item properties so
         # that it can be used by attached publish plugins
@@ -140,33 +93,32 @@ class MariSessionCollector(HookBaseClass):
             # current session path won't change once the item has been created.
             # the attached publish plugins will need to resolve the fields at
             # execution time.
-            channel_item.properties["work_template"] = work_template
-            layer_item.properties["work_template"] = work_template
+            parent_item.properties["work_template"] = work_template
             self.logger.debug("Work file template defined for Mari collection.")
 
-        return channel_item, layer_item
-
-    def _collect_files(self, settings, channel_item, layer_item):
-        """
-        Collect texture files to be published
-        :param dict settings: Configured settings for this collector
-        :param channel_item:   Parent Item instance for channels
-        :param layer_item:   Parent item instance for layers
-        """
-
-        # check that we are currently inside a project:
-        if not mari.projects.current():
-            raise TankError("You must be in an open Mari project to be able to publish!")
-
-        publisher = self.parent
-
         icon_path = os.path.join(
+            self.disk_location,
+            os.pardir,
+            "icons",
+            "mari_channel_publish.png"
+        )
+
+        layers_icon_path = os.path.join(
+            self.disk_location,
+            os.pardir,
+            "icons",
+            "mari_layer_publish.png"
+        )
+
+        layer_icon_path = os.path.join(
             self.disk_location,
             os.pardir,
             "icons",
             "texture.png"
         )
 
+        layers_item = None
+        thumbnail = self._extract_mari_thumbnail()
         # Look for all layers for all channels on all geometry.  Create items for both
         # the flattened channel as well as the individual layers
         for geo in mari.geo.list():
@@ -183,17 +135,22 @@ class MariSessionCollector(HookBaseClass):
 
                 # add item for whole flattened channel:
                 item_name = "%s, %s" % (geo.name(), channel.name())
-                item = channel_item.create_item(
+                channel_item = parent_item.create_item(
                     "mari.texture",
                     "Channel",
                     item_name
                 )
-                item.set_icon_from_path(icon_path)
-                item.thumbnail_enabled = True
-                
-                item.properties["geo_publish_name"] = geo_name
-                item.properties["channel_publish_name"] = channel_name
-                item.set_thumbnail_from_path(self._extract_mari_thumbnail())
+                channel_item.thumbnail_enabled = True
+                channel_item.set_icon_from_path(icon_path)
+                channel_item.properties["geo_publish_name"] = geo_name
+                channel_item.properties["channel_publish_name"] = channel_name
+                channel_item.set_thumbnail_from_path(thumbnail)
+
+                if len(publishable_layers) > 0 and layers_item is None:
+                    layers_item = channel_item.create_item("mari.layers",
+                                                          "Publish individual layers for channel",
+                                                          "Texture Channel Layers")
+                    layers_item.set_icon_from_path(layers_icon_path)
 
                 # add item for each publishable layer:
                 found_layer_names = set()
@@ -207,17 +164,17 @@ class MariSessionCollector(HookBaseClass):
                     found_layer_names.add(layer_name)
 
                     item_name = "%s, %s (%s)" % (geo.name(), channel.name(), layer_name)
-                    item = layer_item.create_item(
+                    layer_item = layers_item.create_item(
                         "mari.texture",
                         "Layer",
                         item_name
                     )
-                    item.set_icon_from_path(icon_path)
-                    item.set_thumbnail_from_path(self._extract_mari_thumbnail())
-
-                    item.properties["geo_publish_name"] = geo_name
-                    item.properties["channel_publish_name"] = channel_name
-                    item.properties["layer_publish_name"] = layer_name
+                    layer_item.thumbnail_enabled = True
+                    layer_item.set_icon_from_path(layer_icon_path)
+                    layer_item.properties["geo_publish_name"] = geo_name
+                    layer_item.properties["channel_publish_name"] = channel_name
+                    layer_item.properties["layer_publish_name"] = layer_name
+                    layer_item.set_thumbnail_from_path(thumbnail)
 
     def _find_publishable_layers_r(self, layers):
         """
