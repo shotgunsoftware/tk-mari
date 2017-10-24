@@ -16,7 +16,7 @@ import sgtk
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
-class MariSessionPublishPlugin(HookBaseClass):
+class MariTexturesPublishPlugin(HookBaseClass):
     """
     Plugin for publishing an open mari session.
     """
@@ -411,7 +411,7 @@ class MariSessionPublishPlugin(HookBaseClass):
             query_fields = ["version_number"]
             sg_publishes = self.parent.shotgun.find(publish_entity_type, filters, query_fields)
         except Exception, e:
-            raise TankError("Failed to find publishes of type '%s', called '%s', for context %s: %s" 
-                            % (publish_name, publish_type, ctx, e))
+            self.logger.error("Failed to find publishes of type '%s', called '%s', for context %s: %s" 
+                              % (publish_name, publish_type, ctx, e))
         return sg_publishes
 
