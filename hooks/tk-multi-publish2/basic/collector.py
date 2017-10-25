@@ -57,7 +57,7 @@ class MariSessionCollector(HookBaseClass):
         """
 
         if not mari.projects.current():
-            self.logger.warning("You must be in an open Mari project to be able to publish!")
+            self.logger.warning("You must be in an open Mari project. No items collected!")
             return
 
         publisher = self.parent
@@ -66,14 +66,14 @@ class MariSessionCollector(HookBaseClass):
             self.disk_location,
             os.pardir,
             "icons",
-            "mari_channel_publish.png"
+            "mari_channel.png"
         )
 
         layers_icon_path = os.path.join(
             self.disk_location,
             os.pardir,
             "icons",
-            "mari_layer_publish.png"
+            "mari_layer.png"
         )
 
         layer_icon_path = os.path.join(
@@ -93,10 +93,11 @@ class MariSessionCollector(HookBaseClass):
             for channel in geo.channelList():
                 channel_name = channel.name()
 
-                # find all publishable layers:
-                publishable_layers = self._find_publishable_layers_r(channel.layerList())
-                if not publishable_layers:
+                # find all collected layers:
+                collected_layers = self._find_layers_r(channel.layerList())
+                if not collected_layers:
                     # no layers to publish!
+                    self.logger.warning("Channel '%s' has no layers. The channel will not be collected" % channel_name)
                     continue
 
                 # add item for whole flattened channel:
@@ -108,24 +109,25 @@ class MariSessionCollector(HookBaseClass):
                 )
                 channel_item.thumbnail_enabled = True
                 channel_item.set_icon_from_path(icon_path)
-                channel_item.properties["geo_publish_name"] = geo_name
-                channel_item.properties["channel_publish_name"] = channel_name
+                channel_item.properties["mari_geo_name"] = geo_name
+                channel_item.properties["mari_channel_name"] = channel_name
                 channel_item.set_thumbnail_from_path(thumbnail)
 
-                if len(publishable_layers) > 0 and layers_item is None:
+                if len(collected_layers) > 0 and layers_item is None:
                     layers_item = channel_item.create_item("mari.layers",
-                                                          "Publish individual layers for channel",
+                                                          "Unflattened layers for the channel",
                                                           "Texture Channel Layers")
                     layers_item.set_icon_from_path(layers_icon_path)
 
-                # add item for each publishable layer:
+                # add item for each collected layer:
                 found_layer_names = set()
-                for layer in publishable_layers:
+                for layer in collected_layers:
                     
                     # for now, duplicate layer names aren't allowed!
                     layer_name = layer.name()
                     if layer_name in found_layer_names:
                         # we might want to handle this one day...
+                        self.logger.warning("Duplicate layer name found: %s. Layer will not be exported" % layer_name)
                         pass
                     found_layer_names.add(layer_name)
 
@@ -137,32 +139,32 @@ class MariSessionCollector(HookBaseClass):
                     )
                     layer_item.thumbnail_enabled = True
                     layer_item.set_icon_from_path(layer_icon_path)
-                    layer_item.properties["geo_publish_name"] = geo_name
-                    layer_item.properties["channel_publish_name"] = channel_name
-                    layer_item.properties["layer_publish_name"] = layer_name
+                    layer_item.properties["mari_geo_name"] = geo_name
+                    layer_item.properties["mari_channel_name"] = channel_name
+                    layer_item.properties["mari_layer_name"] = layer_name
                     layer_item.set_thumbnail_from_path(thumbnail)
 
-    def _find_publishable_layers_r(self, layers):
+    def _find_layers_r(self, layers):
         """
-        Find all publishable layers within the specified list of layers.  This will return
+        Find all layers within the specified list of layers.  This will return
         all layers that are either paintable or procedural and traverse any layer groups
-        to find all grouped publishable layers
+        to find all grouped layers to be collected
         :param layers:  The list of layers to inspect
-        :returns:       A list of all publishable layers
+        :returns:       A list of all collected layers
         """
-        publishable = []
+        collected_layers = []
         for layer in layers:
             # Note, only paintable or procedural layers are exportable from Mari - all
             # other layer types are only used within Mari.
             if layer.isPaintableLayer() or layer.isProceduralLayer():
-                # these are the only types of layers that are publishable
-                publishable.append(layer)
+                # these are the only types of layers that can be collected
+                collected_layers.append(layer)
             elif layer.isGroupLayer():
                 # recurse over all layers in the group looking for exportable layers:
-                grouped_layers = self._find_publishable_layers_r(layer.layerStack().layerList())
-                publishable.extend(grouped_layers or [])
+                grouped_layers = self._find_layers_r(layer.layerStack().layerList())
+                collected_layers.extend(grouped_layers or [])
     
-        return publishable
+        return collected_layers
 
     def _extract_mari_thumbnail(self):
         """

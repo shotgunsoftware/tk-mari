@@ -192,19 +192,19 @@ class MariTexturesPublishPlugin(HookBaseClass):
             self.logger.warning("Validation failed. Publish template not found")
             return False
 
-        geo_name = item.properties["geo_publish_name"]
+        geo_name = item.properties["mari_geo_name"]
         geo = mari.geo.find(geo_name)
         if not geo:
             self.logger.warning("Failed to find geometry in the project! Validation failed." % geo_name)
             return False
         
-        channel_name = item.properties["channel_publish_name"]
+        channel_name = item.properties["mari_channel_name"]
         channel = geo.findChannel(channel_name)
         if not channel:
             self.logger.warning("Failed to find channel on geometry! Validation failed." % channel_name)
             return False
         
-        layer_name = item.properties.get("layer_publish_name")
+        layer_name = item.properties.get("mari_layer_name")
         if layer_name:
             layer = channel.findLayer(layer_name)
             if not layer:
@@ -224,11 +224,11 @@ class MariTexturesPublishPlugin(HookBaseClass):
 
         publisher = self.parent
 
-        geo_name = item.properties["geo_publish_name"]
+        geo_name = item.properties["mari_geo_name"]
         geo = mari.geo.find(geo_name)        
-        channel_name = item.properties["channel_publish_name"]
+        channel_name = item.properties["mari_channel_name"]
         channel = geo.findChannel(channel_name)
-        layer_name = item.properties.get("layer_publish_name")
+        layer_name = item.properties.get("mari_layer_name")
 
         publish_template = item.properties["publish_template"]
 
