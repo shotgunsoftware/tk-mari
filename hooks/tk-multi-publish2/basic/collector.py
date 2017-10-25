@@ -44,26 +44,8 @@ class MariSessionCollector(HookBaseClass):
         part of its environment configuration.
         """
 
-        # grab any base class settings
-        collector_settings = super(MariSessionCollector, self).settings or {}
-
-        # settings specific to this collector
-        mari_session_settings = {
-            "Work Template": {
-                "type": "template",
-                "default": None,
-                "description": "Template path for artist work files. Should "
-                               "correspond to a template defined in "
-                               "templates.yml. If configured, is made available"
-                               "to publish plugins via the collected item's "
-                               "properties. ",
-            },
-        }
-
-        # update the base settings with these settings
-        collector_settings.update(mari_session_settings)
-
-        return collector_settings
+        # return base class settings as there are is no Work Template at the moment for Mari
+        return super(MariSessionCollector, self).settings or {}
 
     def process_current_session(self, settings, parent_item):
         """
@@ -79,22 +61,6 @@ class MariSessionCollector(HookBaseClass):
             return
 
         publisher = self.parent
-
-        # if a work file template is defined, add it to the item properties so
-        # that it can be used by attached publish plugins
-        work_template_setting = settings.get("Work Template")
-        if work_template_setting:
-
-            work_template = publisher.engine.get_template_by_name(
-                work_template_setting.value)
-
-            # store the template on the item for use by publish plugins. we
-            # can't evaluate the fields here because there's no guarantee the
-            # current session path won't change once the item has been created.
-            # the attached publish plugins will need to resolve the fields at
-            # execution time.
-            parent_item.properties["work_template"] = work_template
-            self.logger.debug("Work file template defined for Mari collection.")
 
         icon_path = os.path.join(
             self.disk_location,
