@@ -22,6 +22,44 @@ class MariEngine(sgtk.platform.Engine):
     """
     The engine class
     """
+
+    @property
+    def host_info(self):
+        """
+        :returns: A dictionary with information about the application hosting this engine.
+
+        The returned dictionary is of the following form on success:
+
+            {
+                "name": "Mari",
+                "version": "1.2.3",
+            }
+
+        The returned dictionary is of following form on an error preventing
+        the version identification.
+
+            {
+                "name": "Mari",
+                "version: "unknown"
+            }
+        """
+        host_info = {"name": "Mari", "version": "unknown"}
+
+        try:
+            mari_version = mari.app.version()
+
+            host_info["version"] = "%s.%s.%s" % (
+                mari_version.major(),
+                mari_version.minor(),
+                mari_version.revision()
+            )
+
+        except:
+            # Fallback to initialization value above
+            pass
+
+        return host_info
+
     def pre_app_init(self):
         """
         Engine construction/setup done before any apps are initialized
@@ -56,17 +94,6 @@ class MariEngine(sgtk.platform.Engine):
                 os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"         
             
             self.log_warning(msg)
-
-        try:
-            self.log_user_attribute_metric("Mari version",
-                "%s.%s.%s" % (mari_version.major(),
-                              mari_version.minor(),
-                              mari_version.revision()
-                )
-            )
-        except:
-            # ignore all errors. ex: using a core that doesn't support metrics
-            pass
     
         # cache handles to the various manager instances:
         tk_mari = self.import_module("tk_mari")
