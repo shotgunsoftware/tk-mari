@@ -11,6 +11,7 @@
 import mari
 import os
 import pprint
+import re
 import sgtk
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -248,12 +249,20 @@ class MariTexturesPublishPlugin(HookBaseClass):
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        version = 0
+        # For geo name, strip out the non-alphanumeric characters because Mari's
+        # publish template filter does not allow non-alphanumeric characters in
+        # the geo name.
+        pattern = re.compile('[\W_]+', re.UNICODE)
+        geo_name = pattern.sub('', geo_name)
         fields["name"] = geo_name
-        fields["channel"] = channel_name
+
+        version = 0
         fields["version"] = version
+
+        fields["channel"] = channel_name
         fields["layer"] = layer_name
         fields["UDIM"] = "$UDIM"
+
         publish_path = publish_template.apply_fields(fields)
 
         # get the path in a normalized state. no trailing separator, separators
