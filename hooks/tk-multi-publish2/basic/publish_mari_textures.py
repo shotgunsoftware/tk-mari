@@ -252,22 +252,12 @@ class MariTexturesPublishPlugin(HookBaseClass):
         # For geo name, strip out the non-alphanumeric characters because Mari's
         # publish template filter does not allow non-alphanumeric characters in
         # the geo name.
-        pattern = re.compile('[\W_]+', re.UNICODE)
-        geo_name = pattern.sub('', geo_name)
+        geo_name = re.sub(r"[\W_]+", "", geo_name)
         fields["name"] = geo_name
-
-        version = 0
-        fields["version"] = version
 
         fields["channel"] = channel_name
         fields["layer"] = layer_name
         fields["UDIM"] = "$UDIM"
-
-        publish_path = publish_template.apply_fields(fields)
-
-        # get the path in a normalized state. no trailing separator, separators
-        # are appropriate for current os, no double separators, etc.
-        path = sgtk.util.ShotgunPath.normalize(publish_path)
 
         # get the publish name. This will ensure we get a
         # consistent name across version publishes of this file.
@@ -277,10 +267,14 @@ class MariTexturesPublishPlugin(HookBaseClass):
             publish_name = "%s, %s" % (geo_name, channel_name)
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, settings["Publish Type"].value)
-        version = max([p["version_number"] for p in existing_publishes] or [0]) + 1        
-        
+        version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
+
         fields["version"] = version
+
         publish_path = publish_template.apply_fields(fields)
+
+        # get the path in a normalized state. no trailing separator, separators
+        # are appropriate for current os, no double separators, etc.
         path = sgtk.util.ShotgunPath.normalize(publish_path)
 
         self.logger.info("A Publish will be created in Shotgun and linked to:")
