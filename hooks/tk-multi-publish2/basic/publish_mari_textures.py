@@ -234,6 +234,13 @@ class MariTexturesPublishPlugin(HookBaseClass):
         :param item: Item to process
         """
 
+        # Currently there is no primary publish for Mari so just save the
+        # current project to ensure nothing is lost if something goes wrong!
+        proj = mari.projects.current()
+        if proj:
+            self.logger.info("Saving the current project...")
+            proj.save()
+
         publisher = self.parent
 
         geo_name = item.properties["mari_geo_name"]
