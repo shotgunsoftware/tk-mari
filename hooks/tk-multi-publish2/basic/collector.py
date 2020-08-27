@@ -1,11 +1,11 @@
 ﻿# Copyright (c) 2017 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import glob
@@ -57,30 +57,23 @@ class MariSessionCollector(HookBaseClass):
         """
 
         if not mari.projects.current():
-            self.logger.warning("You must be in an open Mari project. No items collected!")
+            self.logger.warning(
+                "You must be in an open Mari project. No items collected!"
+            )
             return
 
         publisher = self.parent
 
         icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "mari_channel.png"
+            self.disk_location, os.pardir, "icons", "mari_channel.png"
         )
 
         layers_icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "mari_layer.png"
+            self.disk_location, os.pardir, "icons", "mari_layer.png"
         )
 
         layer_icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "texture.png"
+            self.disk_location, os.pardir, "icons", "texture.png"
         )
 
         layers_item = None
@@ -89,7 +82,7 @@ class MariSessionCollector(HookBaseClass):
         # the flattened channel as well as the individual layers
         for geo in mari.geo.list():
             geo_name = geo.name()
-            
+
             for channel in geo.channelList():
                 channel_name = channel.name()
 
@@ -97,15 +90,16 @@ class MariSessionCollector(HookBaseClass):
                 collected_layers = self._find_layers_r(channel.layerList())
                 if not collected_layers:
                     # no layers to publish!
-                    self.logger.warning("Channel '%s' has no layers. The channel will not be collected" % channel_name)
+                    self.logger.warning(
+                        "Channel '%s' has no layers. The channel will not be collected"
+                        % channel_name
+                    )
                     continue
 
                 # add item for whole flattened channel:
                 item_name = "%s, %s" % (geo.name(), channel.name())
                 channel_item = parent_item.create_item(
-                    "mari.texture",
-                    "Channel",
-                    item_name
+                    "mari.texture", "Channel", item_name
                 )
                 channel_item.thumbnail_enabled = True
                 channel_item.set_icon_from_path(icon_path)
@@ -114,28 +108,31 @@ class MariSessionCollector(HookBaseClass):
                 channel_item.set_thumbnail_from_path(thumbnail)
 
                 if len(collected_layers) > 0 and layers_item is None:
-                    layers_item = channel_item.create_item("mari.layers",
-                                                          "Unflattened layers for the channel",
-                                                          "Texture Channel Layers")
+                    layers_item = channel_item.create_item(
+                        "mari.layers",
+                        "Unflattened layers for the channel",
+                        "Texture Channel Layers",
+                    )
                     layers_item.set_icon_from_path(layers_icon_path)
 
                 # add item for each collected layer:
                 found_layer_names = set()
                 for layer in collected_layers:
-                    
+
                     # for now, duplicate layer names aren't allowed!
                     layer_name = layer.name()
                     if layer_name in found_layer_names:
                         # we might want to handle this one day...
-                        self.logger.warning("Duplicate layer name found: %s. Layer will not be exported" % layer_name)
+                        self.logger.warning(
+                            "Duplicate layer name found: %s. Layer will not be exported"
+                            % layer_name
+                        )
                         pass
                     found_layer_names.add(layer_name)
 
                     item_name = "%s, %s (%s)" % (geo.name(), channel.name(), layer_name)
                     layer_item = layers_item.create_item(
-                        "mari.texture",
-                        "Layer",
-                        item_name
+                        "mari.texture", "Layer", item_name
                     )
                     layer_item.thumbnail_enabled = True
                     layer_item.set_icon_from_path(layer_icon_path)
@@ -163,34 +160,34 @@ class MariSessionCollector(HookBaseClass):
                 # recurse over all layers in the group looking for exportable layers:
                 grouped_layers = self._find_layers_r(layer.layerStack().layerList())
                 collected_layers.extend(grouped_layers or [])
-    
+
         return collected_layers
 
     def _extract_mari_thumbnail(self):
         """
         Render a thumbnail for the current canvas in Mari
-        
+
         :returns:   The path to the thumbnail on disk
         """
         if not mari.projects.current():
             return
-        
+
         canvas = mari.canvases.current()
         if not canvas:
             return
-        
+
         # calculate the maximum size to capture:
         MAX_THUMB_SIZE = 512
         sz = canvas.size()
         thumb_width = sz.width()
         thumb_height = sz.height()
         max_sz = max(thumb_width, sz.height())
-    
+
         if max_sz > MAX_THUMB_SIZE:
-            scale = min(float(MAX_THUMB_SIZE)/float(max_sz), 1.0)
+            scale = min(float(MAX_THUMB_SIZE) / float(max_sz), 1.0)
             thumb_width = max(min(int(thumb_width * scale), thumb_width), 1)
             thumb_height = max(min(int(thumb_height * scale), thumb_height), 1)
-    
+
         # disable the HUD:
         hud_enabled = canvas.getDisplayProperty("HUD/RenderHud")
         if hud_enabled:
@@ -199,18 +196,20 @@ class MariSessionCollector(HookBaseClass):
 
         # render the thumbnail:
         thumb = None
-        try:    
+        try:
             thumb = canvas.captureImage(thumb_width, thumb_height)
         except:
             pass
-        
+
         # reset the HUD
         if hud_enabled:
             canvas.setDisplayProperty("HUD/RenderHud", True)
-        
+
         if thumb:
             # save the thumbnail
-            jpg_thumb_path = os.path.join(tempfile.gettempdir(), "sgtk_thumb_%s.jpg" % uuid.uuid4().hex)
+            jpg_thumb_path = os.path.join(
+                tempfile.gettempdir(), "sgtk_thumb_%s.jpg" % uuid.uuid4().hex
+            )
             thumb.save(jpg_thumb_path)
-        
+
         return jpg_thumb_path

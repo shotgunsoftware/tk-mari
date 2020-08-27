@@ -1,11 +1,11 @@
 ﻿# Copyright (c) 2017 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import mari
@@ -29,12 +29,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         """
 
         # look for icon one level up from this hook's folder in "icons" folder
-        return os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "publish.png"
-        )
+        return os.path.join(self.disk_location, os.pardir, "icons", "publish.png")
 
     @property
     def name(self):
@@ -92,7 +87,9 @@ class MariTexturesPublishPlugin(HookBaseClass):
         A file can be published multiple times however only the most recent
         publish will be available to other users. Warnings will be provided
         during validation if there are previous publishes.
-        """ % (loader_url,)
+        """ % (
+            loader_url,
+        )
         # TODO: add link to workflow docs
 
     @property
@@ -118,15 +115,15 @@ class MariTexturesPublishPlugin(HookBaseClass):
             "Publish Type": {
                 "type": "shotgun_publish_type",
                 "default": "UDIM Image",
-                "description": "SG publish type to associate publishes with."
+                "description": "SG publish type to associate publishes with.",
             },
             "Publish Template": {
                 "type": "template",
                 "default": None,
                 "description": "Template path for published work files. Should"
-                               "correspond to a template defined in "
-                               "templates.yml.",
-            }
+                "correspond to a template defined in "
+                "templates.yml.",
+            },
         }
 
     @property
@@ -172,10 +169,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         if settings.get("Publish Template").value:
             item.context_change_allowed = False
 
-        return {
-            "accepted": True,
-            "checked": True
-        }
+        return {"accepted": True, "checked": True}
 
     def validate(self, settings, item):
         """
@@ -193,7 +187,9 @@ class MariTexturesPublishPlugin(HookBaseClass):
 
         # populate the publish template on the item if found
         publish_template_setting = settings.get("Publish Template")
-        publish_template = publisher.engine.get_template_by_name(publish_template_setting.value)
+        publish_template = publisher.engine.get_template_by_name(
+            publish_template_setting.value
+        )
         if publish_template:
             item.properties["publish_template"] = publish_template
         else:
@@ -204,22 +200,29 @@ class MariTexturesPublishPlugin(HookBaseClass):
         geo_name = item.properties["mari_geo_name"]
         geo = mari.geo.find(geo_name)
         if not geo:
-            error_msg = "Failed to find geometry in the project! Validation failed." % geo_name
+            error_msg = (
+                "Failed to find geometry in the project! Validation failed." % geo_name
+            )
             self.logger.error(error_msg)
             raise Exception(error_msg)
-        
+
         channel_name = item.properties["mari_channel_name"]
         channel = geo.findChannel(channel_name)
         if not channel:
-            error_msg = "Failed to find channel on geometry! Validation failed." % channel_name
+            error_msg = (
+                "Failed to find channel on geometry! Validation failed." % channel_name
+            )
             self.logger.error(error_msg)
             raise Exception(error_msg)
-        
+
         layer_name = item.properties.get("mari_layer_name")
         if layer_name:
             layer = channel.findLayer(layer_name)
             if not layer:
-                error_msg = "Failed to find layer for channel: %s Validation failed." % layer_name
+                error_msg = (
+                    "Failed to find layer for channel: %s Validation failed."
+                    % layer_name
+                )
                 self.logger.error(error_msg)
                 raise Exception(error_msg)
         return True
@@ -244,7 +247,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         publisher = self.parent
 
         geo_name = item.properties["mari_geo_name"]
-        geo = mari.geo.find(geo_name)        
+        geo = mari.geo.find(geo_name)
         channel_name = item.properties["mari_channel_name"]
         channel = geo.findChannel(channel_name)
         layer_name = item.properties.get("mari_layer_name")
@@ -273,7 +276,9 @@ class MariTexturesPublishPlugin(HookBaseClass):
         else:
             publish_name = "%s, %s" % (geo_name, channel_name)
 
-        existing_publishes = self._find_publishes(self.parent.context, publish_name, settings["Publish Type"].value)
+        existing_publishes = self._find_publishes(
+            self.parent.context, publish_name, settings["Publish Type"].value
+        )
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
 
         fields["version"] = version
@@ -318,7 +323,9 @@ class MariTexturesPublishPlugin(HookBaseClass):
                     # remove the duplicate channel, destroying the channel and the flattened layer:
                     geo.removeChannel(duplicate_channel, geo.DESTROY_ALL)
             else:
-                self.logger.error("Channel '%s' doesn't appear to have any layers!" % channel.name())            
+                self.logger.error(
+                    "Channel '%s' doesn't appear to have any layers!" % channel.name()
+                )
 
         # arguments for publish registration
         self.logger.info("Registering publish...")
@@ -341,15 +348,14 @@ class MariTexturesPublishPlugin(HookBaseClass):
                 "action_show_more_info": {
                     "label": "Publish Data",
                     "tooltip": "Show the complete Publish data dictionary",
-                    "text": "<pre>%s</pre>" % (pprint.pformat(publish_data),)
+                    "text": "<pre>%s</pre>" % (pprint.pformat(publish_data),),
                 }
-            }
+            },
         )
 
         # create the publish and stash it in the item properties for other
         # plugins to use.
-        item.properties["sg_publish_data"] = sgtk.util.register_publish(
-            **publish_data)
+        item.properties["sg_publish_data"] = sgtk.util.register_publish(**publish_data)
 
         # inject the publish path such that children can refer to it when
         # updating dependency information
@@ -378,10 +384,10 @@ class MariTexturesPublishPlugin(HookBaseClass):
 
         # ensure conflicting publishes have their status cleared
         publisher.util.clear_status_for_conflicting_publishes(
-            item.context, publish_data)
+            item.context, publish_data
+        )
 
-        self.logger.info(
-            "Cleared the status of all previous, conflicting publishes")
+        self.logger.info("Cleared the status of all previous, conflicting publishes")
 
         path = item.properties["path"]
         self.logger.info(
@@ -390,49 +396,52 @@ class MariTexturesPublishPlugin(HookBaseClass):
                 "action_show_in_shotgun": {
                     "label": "Show Publish",
                     "tooltip": "Open the Publish in Shotgun.",
-                    "entity": publish_data
+                    "entity": publish_data,
                 }
-            }
+            },
         )
 
     def _find_publishes(self, ctx, publish_name, publish_type):
         """
         Given a context, publish name and type, find all publishes from Shotgun
         that match.
-        
+
         :param ctx:             Context to use when looking for publishes
         :param publish_name:    The name of the publishes to look for
         :param publish_type:    The type of publishes to look for
-        
+
         :returns:               A list of Shotgun publish records that match the search
-                                criteria        
+                                criteria
         """
         publish_entity_type = sgtk.util.get_published_file_entity_type(self.parent.sgtk)
         if publish_entity_type == "PublishedFile":
             publish_type_field = "published_file_type.PublishedFileType.code"
         else:
             publish_type_field = "tank_type.TankType.code"
-        
+
         # construct filters from the context:
         filters = [["project", "is", ctx.project]]
         if ctx.entity:
             filters.append(["entity", "is", ctx.entity])
         if ctx.task:
             filters.append(["task", "is", ctx.task])
-            
+
         # add in name & type:
         if publish_name:
             filters.append(["name", "is", publish_name])
         if publish_type:
             filters.append([publish_type_field, "is", publish_type])
-            
+
         # retrieve a list of all matching publishes from Shotgun:
         sg_publishes = []
         try:
             query_fields = ["version_number"]
-            sg_publishes = self.parent.shotgun.find(publish_entity_type, filters, query_fields)
-        except Exception, e:
-            self.logger.error("Failed to find publishes of type '%s', called '%s', for context %s: %s" 
-                              % (publish_name, publish_type, ctx, e))
+            sg_publishes = self.parent.shotgun.find(
+                publish_entity_type, filters, query_fields
+            )
+        except Exception as e:
+            self.logger.error(
+                "Failed to find publishes of type '%s', called '%s', for context %s: %s"
+                % (publish_name, publish_type, ctx, e)
+            )
         return sg_publishes
-
