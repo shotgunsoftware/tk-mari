@@ -197,7 +197,7 @@ class MariSessionCollector(HookBaseClass):
         # render the thumbnail:
         thumb = None
         try:
-            thumb = canvas.captureImage(thumb_width, thumb_height)
+            thumb = canvas.capture(thumb_width, thumb_height)
         except:
             pass
 
