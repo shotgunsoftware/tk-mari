@@ -225,12 +225,13 @@ class MariSessionCollector(HookBaseClass):
         # if available.
         if hasattr(canvas, "capture"):
             thumb = canvas.capture(thumb_width, thumb_height)
-
+        print("isNull", thumb.isNull())
+        print("rect", thumb.rect())
         # The problem is, under Mari v4.6.v2 at the very least, the capture method
         # returns an empty image while captureImage still does the right thing.
         # So if we don't have an image, try to invoke captureImage, if the method
         # is still available.
-        if thumb is None and hasattr(canvas, "captureImage"):
+        if (thumb is None or thumb.isNull()) and hasattr(canvas, "captureImage"):
             thumb = canvas.captureImage(thumb_width, thumb_height)
 
         return thumb
