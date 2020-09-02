@@ -211,5 +211,7 @@ class MariSessionCollector(HookBaseClass):
                 tempfile.gettempdir(), "sgtk_thumb_%s.jpg" % uuid.uuid4().hex
             )
             thumb.save(jpg_thumb_path)
+        else:
+            jpg_thumb_path = None
 
         return jpg_thumb_path
