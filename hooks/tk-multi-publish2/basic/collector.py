@@ -197,7 +197,7 @@ class MariSessionCollector(HookBaseClass):
         # render the thumbnail:
         thumb = None
         try:
-            thumb = canvas.capture(thumb_width, thumb_height)
+            thumb = self._capture(canvas, thumb_width, thumb_height)
         except:
             pass
 
@@ -215,3 +215,22 @@ class MariSessionCollector(HookBaseClass):
             jpg_thumb_path = None
 
         return jpg_thumb_path
+
+    def _capture(self, canvas, thumb_width, thumb_height):
+        """
+        Generate a screenshot from the given canvas.
+        """
+        thumb = None
+        # The capture method was introduced to deprecate captureImage, so use it
+        # if available.
+        if hasattr(canvas, "capture"):
+            thumb = canvas.capture(thumb_width, thumb_height)
+
+        # The problem is, under Mari v4.6.v2 at the very least, the capture method
+        # returns an empty image while captureImage still does the right thing.
+        # So if we don't have an image, try to invoke captureImage, if the method
+        # is still available.
+        if thumb is None and hasattr(canvas, "captureImage"):
+            thumb = canvas.captureImage(thumb_width, thumb_height)
+
+        return thumb
