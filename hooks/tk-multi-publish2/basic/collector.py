@@ -195,7 +195,11 @@ class MariSessionCollector(HookBaseClass):
             canvas.setDisplayProperty("HUD/RenderHud", False)
 
         # render the thumbnail:
-        thumb = self._capture(canvas, thumb_width, thumb_height)
+        thumb = None
+        try:
+            thumb = self._capture(canvas, thumb_width, thumb_height)
+        except:
+            pass
 
         # reset the HUD
         if hud_enabled:
