@@ -198,7 +198,7 @@ class MariSessionCollector(HookBaseClass):
         thumb = None
         try:
             thumb = self._capture(canvas, thumb_width, thumb_height)
-        except:
+        except Exception:
             pass
 
         # reset the HUD
@@ -227,12 +227,11 @@ class MariSessionCollector(HookBaseClass):
         # differentiate between the signatures with and without arguments
         # for capture, but the module can't read the parameters from C Python
         # methods.
-        version = mari.app.version()
 
         # In Mari 4.6.4+ we can capture with width and height passed in
         try:
             return canvas.capture(thumb_width, thumb_height)
-        except:
+        except Exception:
             pass
         else:
             return thumb
@@ -243,7 +242,7 @@ class MariSessionCollector(HookBaseClass):
             if image:
                 image = image.scaled(thumb_width, thumb_height)
             return image
-        except:
+        except Exception:
             pass
 
         # Finally in older versions of Mari, capture is not even an option, so call
