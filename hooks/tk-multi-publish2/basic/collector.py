@@ -195,11 +195,7 @@ class MariSessionCollector(HookBaseClass):
             canvas.setDisplayProperty("HUD/RenderHud", False)
 
         # render the thumbnail:
-        thumb = None
-        try:
-            thumb = self._capture(canvas, thumb_width, thumb_height)
-        except:
-            pass
+        thumb = self._capture(canvas, thumb_width, thumb_height)
 
         # reset the HUD
         if hud_enabled:
@@ -221,17 +217,31 @@ class MariSessionCollector(HookBaseClass):
         Generate a screenshot from the given canvas.
         """
         thumb = None
-        # The capture method was introduced to deprecate captureImage, so use it
-        # if available.
-        if hasattr(canvas, "capture"):
-            thumb = canvas.capture(thumb_width, thumb_height)
-        print("isNull", thumb.isNull())
-        print("rect", thumb.rect())
-        # The problem is, under Mari v4.6.v2 at the very least, the capture method
-        # returns an empty image while captureImage still does the right thing.
-        # So if we don't have an image, try to invoke captureImage, if the method
-        # is still available.
-        if (thumb is None or thumb.isNull()) and hasattr(canvas, "captureImage"):
-            thumb = canvas.captureImage(thumb_width, thumb_height)
 
-        return thumb
+        # The capture method was introduced to deprecate captureImage in 4.6,
+        # so use it if available. We could have use the inspect module here to
+        # differentiate between the signatures with and without arguments
+        # for capture, but the module can't read the parameters from C Python
+        # methods.
+        version = mari.app.version()
+
+        # In Mari 4.6.4+ we can capture with width and height passed in
+        try:
+            return canvas.capture(thumb_width, thumb_height)
+        except:
+            pass
+        else:
+            return thumb
+
+        # In some earlier versions, we need to call scale after capture
+        try:
+            image = canvas.capture()
+            if image:
+                image = image.scaled(thumb_width, thumb_height)
+            return image
+        except:
+            pass
+
+        # Finally in older versions of Mari, capture is not even an option, so call
+        # captureImage
+        return canvas.captureImage(thumb_width, thumb_height)
