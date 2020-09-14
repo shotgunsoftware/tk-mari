@@ -70,7 +70,7 @@ class MariEngine(sgtk.platform.Engine):
 
         # check that this version of Mari is supported:
         MIN_VERSION = (2, 6, 1)  # completely unsupported below this!
-        MAX_VERSION = (4, 2)  # untested above this so display a warning
+        MAX_VERSION = (4, 6)  # untested above this so display a warning
 
         mari_version = mari.app.version()
         if mari_version.major() < MIN_VERSION[0] or (
