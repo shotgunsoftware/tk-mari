@@ -203,14 +203,13 @@ class MenuGenerator(object):
         for disk_location in paths:
 
             # get the setting
-            system = sys.platform
 
             # run the app
-            if system == "linux2":
+            if sgtk.util.is_linux():
                 cmd = 'xdg-open "%s"' % disk_location
-            elif system == "darwin":
+            elif sgtk.util.is_macos():
                 cmd = 'open "%s"' % disk_location
-            elif system == "win32":
+            elif sgtk.util.is_windows():
                 cmd = 'cmd.exe /C start "Folder" "%s"' % disk_location
             else:
                 raise Exception("Platform '%s' is not supported." % system)

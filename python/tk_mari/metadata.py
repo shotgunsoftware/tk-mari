@@ -285,7 +285,7 @@ class MetadataManager(object):
         :param metadata:    The metadata to add
         :param md_details:  Definitions of the metadata to add.
         """
-        for name, details in md_details.iteritems():
+        for name, details in md_details.items():
             value = metadata.get(name, details.get("default_value"))
             if value == None:
                 continue
@@ -312,7 +312,7 @@ class MetadataManager(object):
         :returns:           A dictionary containing the metadata retrieved from the object
         """
         metadata = {}
-        for name, _ in md_details.iteritems():
+        for name, _ in md_details.items():
             md_name = "tk_%s" % name
             if obj.hasMetadata(md_name):
                 metadata[name] = obj.metadata(md_name)
