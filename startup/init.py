@@ -15,7 +15,6 @@ import mari
 
 # HACK: Do not merge. It appears the Python 3 version of Mari does not properly added PYTHONPATH to sys.path
 import sys
-import os
 
 sys.path.insert(0, os.environ["PYTHONPATH"])
 
