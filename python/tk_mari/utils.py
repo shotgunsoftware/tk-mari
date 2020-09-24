@@ -70,7 +70,7 @@ def update_publish_records(sg_publishes, min_fields=None):
     if to_update:
         try:
             # query shotgun for the record of any publishes that need updating:
-            filters = [["id", "in", to_update.keys()]]
+            filters = [["id", "in", list(to_update.keys())]]
             sg_res = engine.shotgun.find(
                 sg_publishes[0]["type"], filters, required_fields
             )
