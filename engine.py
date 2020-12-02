@@ -99,7 +99,12 @@ class MariEngine(sgtk.platform.Engine):
                 "The Shotgun Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
                 "You can continue to use the Toolkit but you may experience bugs or "
                 "instability.  Please report any issues you see via %s."
-                % (mari_version.major(), mari_version.minor(), mari_version.revision(), sgtk.support_url)
+                % (
+                    mari_version.major(),
+                    mari_version.minor(),
+                    mari_version.revision(),
+                    sgtk.support_url,
+                )
             )
 
             if (
