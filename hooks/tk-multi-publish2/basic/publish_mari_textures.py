@@ -289,7 +289,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         # are appropriate for current os, no double separators, etc.
         path = sgtk.util.ShotgunPath.normalize(publish_path)
 
-        self.logger.info("A Publish will be created in Shotgun and linked to:")
+        self.logger.info("A Publish will be created in SG and linked to:")
         self.logger.info("  %s" % (path,))
 
         if layer_name:

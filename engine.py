@@ -79,7 +79,7 @@ class MariEngine(sgtk.platform.Engine):
         ):
             # this is a completely unsupported version of Mari!
             raise TankError(
-                "This version of Mari (%d.%dv%d) is not supported by Shotgun Toolkit.  The"
+                "This version of Mari (%d.%dv%d) is not supported by SG Toolkit.  The"
                 "minimum required version is %d.%dv%d."
                 % (
                     mari_version.major(),
@@ -96,7 +96,7 @@ class MariEngine(sgtk.platform.Engine):
         ):
             # this is an untested version of Mari
             msg = (
-                "The Shotgun Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
+                "The SG Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
                 "You can continue to use the Toolkit but you may experience bugs or "
                 "instability.  Please report any issues you see via %s."
                 % (
@@ -283,21 +283,21 @@ class MariEngine(sgtk.platform.Engine):
         if not hasattr(self, "_debug_logging"):
             self._debug_logging = self.get_setting("debug_logging", False)
         if self._debug_logging:
-            print("Shotgun Debug: %s" % msg)
+            print("SG Debug: %s" % msg)
 
     def log_info(self, msg):
         """
         Log some info
         :param msg:    The info message to log
         """
-        print("Shotgun Info: %s" % msg)
+        print("SG Info: %s" % msg)
 
     def log_warning(self, msg):
         """
         Log a warning
         :param msg:    The warning message to log
         """
-        msg = "Shotgun Warning: %s" % msg
+        msg = "SG Warning: %s" % msg
         print(msg)
         # mari.utils.message(msg)
 
@@ -306,7 +306,7 @@ class MariEngine(sgtk.platform.Engine):
         Log an error
         :param msg:    The error message to log
         """
-        msg = "Shotgun Error: %s" % msg
+        msg = "SG Error: %s" % msg
         print(msg)
         mari.utils.message(msg)
 
@@ -334,9 +334,7 @@ class MariEngine(sgtk.platform.Engine):
         if not md:
             # This project has never been opened with Toolkit running before
             # so don't need to do anything!
-            self.log_debug(
-                "Work area unchanged - the opened project is not Shotgun aware!"
-            )
+            self.log_debug("Work area unchanged - the opened project is not SG aware!")
             return
 
         # try to determine the project context from the metadata:
@@ -380,8 +378,6 @@ class MariEngine(sgtk.platform.Engine):
             # start new engine with the new context:
             sgtk.platform.start_engine(self.name, ctx.sgtk, ctx)
         except TankError as e:
-            self.log_error(
-                "Failed to start Shotgun engine for Work Area %s: %s" % (ctx, e)
-            )
+            self.log_error("Failed to start SG engine for Work Area %s: %s" % (ctx, e))
         except Exception as e:
-            self.log_exception("Failed to start Shotgun engine for Work Area %s" % ctx)
+            self.log_exception("Failed to start SG engine for Work Area %s" % ctx)
