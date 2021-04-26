@@ -80,11 +80,7 @@ class MetadataManager(object):
             "default_value": "",
         },
         "entity_id": {"display_name": "Shotgun Entity Id", "visible": False},
-        "entity": {
-            "display_name": "Shotgun Entity",
-            "visible": True,
-            "default_value": "",
-        },
+        "entity": {"display_name": "Shotgun Entity", "visible": True, "default_value": "",},
         "task_id": {"display_name": "Shotgun Task Id", "visible": False},
         "task": {"display_name": "Shotgun Task", "visible": True, "default_value": ""},
     }

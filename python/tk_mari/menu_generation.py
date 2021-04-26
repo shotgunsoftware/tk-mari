@@ -106,7 +106,7 @@ class MenuGenerator(object):
         """
         Create the Shotgun menu
         """
-        self._engine.log_debug("Creating the Shotgun menu for Mari...")
+        self._engine.log_debug("Creating the SG menu for Mari...")
 
         shotgun_menu = "%s/%s" % (
             MenuGenerator.MAIN_MENU_SET,
@@ -119,7 +119,7 @@ class MenuGenerator(object):
         # now enumerate all items and create menu objects for them
         menu_items = []
         for (cmd_name, cmd_details) in self._engine.commands.items():
-            # if not (cmd_name == "Shotgun File Manager..." or cmd_name == "Version up Current Scene..."):
+            # if not (cmd_name == "SG File Manager..." or cmd_name == "Version up Current Scene..."):
             menu_items.append(AppCommand(cmd_name, cmd_details, self.__action_factory))
 
         commands_by_app = {}
@@ -148,7 +148,7 @@ class MenuGenerator(object):
         This has been logged with the Foundry (#2014080310000042).
 
         """
-        self._engine.log_debug("Destroying the Shotgun menu for Mari...")
+        self._engine.log_debug("Destroying the SG menu for Mari...")
 
         # clear the action factory:
         self.__action_factory.clear()
