@@ -114,7 +114,7 @@ class MariEngine(sgtk.platform.Engine):
                 >= self.get_setting("compatibility_dialog_min_version")
             ):
                 # show the warning dialog the first time:
-                mari.utils.message(msg, "Shotgun")
+                mari.utils.message(msg, "ShotGrid")
                 os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"
 
             self.log_warning(msg)

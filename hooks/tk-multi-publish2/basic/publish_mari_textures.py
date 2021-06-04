@@ -36,7 +36,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         """
         One line display name describing the plugin
         """
-        return "Publish to Shotgun"
+        return "Publish to ShotGrid"
 
     @property
     def description(self):
@@ -395,7 +395,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
             extra={
                 "action_show_in_shotgun": {
                     "label": "Show Publish",
-                    "tooltip": "Open the Publish in Shotgun.",
+                    "tooltip": "Open the Publish in ShotGrid.",
                     "entity": publish_data,
                 }
             },

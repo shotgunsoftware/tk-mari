@@ -55,45 +55,49 @@ class MetadataManager(object):
 
     # Shotgun metadata definition for a Mari Project entity
     __PROJECT_METADATA_INFO = {
-        "project_id": {"display_name": "Shotgun Project Id", "visible": False},
+        "project_id": {"display_name": "ShotGrid Project Id", "visible": False},
         "entity_type": {
-            "display_name": "Shotgun Entity Type",
+            "display_name": "ShotGrid Entity Type",
             "visible": False,
             "default_value": "",
         },
-        "entity_id": {"display_name": "Shotgun Entity Id", "visible": False},
-        "step_id": {"display_name": "Shotgun Step Id", "visible": False},
-        "task_id": {"display_name": "Shotgun Task Id", "visible": False},
+        "entity_id": {"display_name": "ShotGrid Entity Id", "visible": False},
+        "step_id": {"display_name": "ShotGrid Step Id", "visible": False},
+        "task_id": {"display_name": "ShotGrid Task Id", "visible": False},
     }
 
     # Shotgun metadata definition for a Mari GeoEntity entity
     __GEO_METADATA_INFO = {
-        "project_id": {"display_name": "Shotgun Project Id", "visible": False},
+        "project_id": {"display_name": "ShotGrid Project Id", "visible": False},
         "project": {
-            "display_name": "Shotgun Project",
+            "display_name": "ShotGrid Project",
             "visible": True,
             "default_value": "",
         },
         "entity_type": {
-            "display_name": "Shotgun Entity Type",
+            "display_name": "ShotGrid Entity Type",
             "visible": False,
             "default_value": "",
         },
-        "entity_id": {"display_name": "Shotgun Entity Id", "visible": False},
-        "entity": {"display_name": "Shotgun Entity", "visible": True, "default_value": "",},
-        "task_id": {"display_name": "Shotgun Task Id", "visible": False},
-        "task": {"display_name": "Shotgun Task", "visible": True, "default_value": ""},
+        "entity_id": {"display_name": "ShotGrid Entity Id", "visible": False},
+        "entity": {
+            "display_name": "ShotGrid Entity",
+            "visible": True,
+            "default_value": "",
+        },
+        "task_id": {"display_name": "ShotGrid Task Id", "visible": False},
+        "task": {"display_name": "ShotGrid Task", "visible": True, "default_value": ""},
     }
 
     # Shotgun metadata definition for a Mari GeoEntityVersion entity
     __GEO_VERSION_METADATA_INFO = {
         "path": {
-            "display_name": "Shotgun Project Id",
+            "display_name": "ShotGrid Project Id",
             "visible": True,
             "default_value": "",
         },
-        "publish_id": {"display_name": "Shotgun Project", "visible": True},
-        "version": {"display_name": "Shotgun Entity Type", "visible": True},
+        "publish_id": {"display_name": "ShotGrid Project", "visible": True},
+        "version": {"display_name": "ShotGrid Entity Type", "visible": True},
     }
 
     def __init__(self):
@@ -204,7 +208,7 @@ class MetadataManager(object):
             metadata["project"] = project.get("name")
         if entity:
             metadata_info["entity"]["display_name"] = (
-                "Shotgun %s" % entity.get("type") or "Entity"
+                "ShotGrid %s" % entity.get("type") or "Entity"
             )
             metadata["entity_type"] = entity["type"]
             metadata["entity_id"] = entity["id"]
