@@ -45,7 +45,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         contain simple html for formatting.
         """
 
-        loader_url = "https://support.shotgunsoftware.com/hc/en-us/articles/219033078"
+        loader_url = "https://developer.shotgridsoftware.com/a4c0a4f1/?title=Loader"
 
         return """
         Publishes the file to ShotGrid. A <b>Publish</b> entry will be
