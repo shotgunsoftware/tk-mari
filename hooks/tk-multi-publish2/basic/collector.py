@@ -118,7 +118,6 @@ class MariSessionCollector(HookBaseClass):
                 # add item for each collected layer:
                 found_layer_names = set()
                 for layer in collected_layers:
-
                     # for now, duplicate layer names aren't allowed!
                     layer_name = layer.name()
                     if layer_name in found_layer_names:
