@@ -100,7 +100,7 @@ class MenuGenerator(object):
         self.__action_factory = ActionFactory()
 
     MAIN_MENU_SET = "MainWindow"
-    SHOTGUN_MENU_ROOT = "ShotGrid"
+    SHOTGUN_MENU_ROOT = "Flow Production Tracking"
 
     def create_menu(self):
         """
@@ -266,7 +266,7 @@ class MenuGenerator(object):
         )
         mari.menus.addAction(action, ctx_menu)
         action = self.__action_factory.create_action(
-            "Jump To ShotGrid", self._jump_to_sg
+            "Jump To Flow Production Tracking", self._jump_to_sg
         )
         mari.menus.addAction(action, ctx_menu)
 

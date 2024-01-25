@@ -36,7 +36,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         """
         One line display name describing the plugin
         """
-        return "Publish to ShotGrid"
+        return "Publish to Flow Production Tracking"
 
     @property
     def description(self):
@@ -48,8 +48,8 @@ class MariTexturesPublishPlugin(HookBaseClass):
         loader_url = "https://help.autodesk.com/view/SGDEV/ENU/?contextId=PC_APP_LOADER"
 
         return """
-        Publishes the file to ShotGrid. A <b>Publish</b> entry will be
-        created in ShotGrid which will include a reference to the file's current
+        Publishes the file to Flow Production Tracking. A <b>Publish</b> entry will be
+        created in Flow Production Tracking which will include a reference to the file's current
         path on disk. Other users will be able to access the published file via
         the <b><a href='%s'>Loader</a></b> so long as they have access to
         the file's location on disk.
@@ -62,7 +62,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         file to the next version after publishing.
 
         The <code>version</code> field of the resulting <b>Publish</b> in
-        ShotGrid will also reflect the version number identified in the filename.
+        Flow Production Tracking will also reflect the version number identified in the filename.
         The basic worklfow recognizes the following version formats by default:
 
         <ul>
@@ -395,7 +395,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
             extra={
                 "action_show_in_shotgun": {
                     "label": "Show Publish",
-                    "tooltip": "Open the Publish in ShotGrid.",
+                    "tooltip": "Open the Publish in Flow Production Tracking.",
                     "entity": publish_data,
                 }
             },

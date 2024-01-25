@@ -79,4 +79,7 @@ def update_publish_records(sg_publishes, min_fields=None):
             for sg_item in sg_res:
                 to_update[sg_item["id"]].update(sg_item)
         except Exception as e:
-            raise TankError("Failed to retrieve publish details from ShotGrid: %s" % e)
+            raise TankError(
+                "Failed to retrieve publish details from Flow Production Tracking: %s"
+                % e
+            )
