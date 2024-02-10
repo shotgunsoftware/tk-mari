@@ -79,8 +79,9 @@ class MariEngine(sgtk.platform.Engine):
         ):
             # this is a completely unsupported version of Mari!
             raise TankError(
-                "This version of Mari (%d.%dv%d) is not supported by Flow Production Tracking Toolkit.  The"
-                "minimum required version is %d.%dv%d."
+                "This version of Mari (%d.%dv%d) is not supported by "
+                "Flow Production Tracking Toolkit. The minimum required "
+                "version is %d.%dv%d."
                 % (
                     mari_version.major(),
                     mari_version.minor(),
