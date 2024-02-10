@@ -21,10 +21,10 @@ def show_warning(msg):
 
     :param msg:    The warning message to show
     """
-    warning_msg = "SG Warning: %s" % msg
+    warning_msg = "PTR Warning: %s" % msg
     print(warning_msg)
     if not mari.app.inTerminalMode():
-        mari.utils.misc.message(warning_msg, "SG Warning")
+        mari.utils.misc.message(warning_msg, "PTR Warning")
 
 
 def bootstrap_sgtk():
@@ -46,7 +46,7 @@ def bootstrap_sgtk():
         context = sgtk.context.deserialize(os.environ.get("TANK_CONTEXT"))
     except Exception as e:
         show_warning(
-            "Could not create context! SG Pipeline Toolkit will be disabled. Details: %s"
+            "Could not create context! Flow Production Tracking Toolkit will be disabled. Details: %s"
             % e
         )
         return

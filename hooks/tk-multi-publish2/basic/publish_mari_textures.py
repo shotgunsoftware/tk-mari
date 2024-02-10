@@ -115,7 +115,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
             "Publish Type": {
                 "type": "shotgun_publish_type",
                 "default": "UDIM Image",
-                "description": "SG publish type to associate publishes with.",
+                "description": "PTR publish type to associate publishes with.",
             },
             "Publish Template": {
                 "type": "template",
@@ -289,7 +289,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         # are appropriate for current os, no double separators, etc.
         path = sgtk.util.ShotgunPath.normalize(publish_path)
 
-        self.logger.info("A Publish will be created in SG and linked to:")
+        self.logger.info("A Publish will be created in PTR and linked to:")
         self.logger.info("  %s" % (path,))
 
         if layer_name:
@@ -379,7 +379,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
 
         publisher = self.parent
 
-        # get the data for the publish that was just created in SG
+        # get the data for the publish that was just created in PTR
         publish_data = item.properties["sg_publish_data"]
 
         # ensure conflicting publishes have their status cleared
