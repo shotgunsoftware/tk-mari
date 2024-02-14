@@ -46,7 +46,7 @@ def bootstrap_sgtk():
         context = sgtk.context.deserialize(os.environ.get("TANK_CONTEXT"))
     except Exception as e:
         show_warning(
-            "Could not create context! Flow Production Tracking Toolkit will be disabled. Details: %s"
+            "Could not create context! Flow Production Tracking will be disabled. Details: %s"
             % e
         )
         return
