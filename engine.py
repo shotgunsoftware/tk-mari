@@ -79,8 +79,9 @@ class MariEngine(sgtk.platform.Engine):
         ):
             # this is a completely unsupported version of Mari!
             raise TankError(
-                "This version of Mari (%d.%dv%d) is not supported by SG Toolkit.  The"
-                "minimum required version is %d.%dv%d."
+                "This version of Mari (%d.%dv%d) is not supported by "
+                "Flow Production Tracking. The minimum required "
+                "version is %d.%dv%d."
                 % (
                     mari_version.major(),
                     mari_version.minor(),
@@ -96,9 +97,9 @@ class MariEngine(sgtk.platform.Engine):
         ):
             # this is an untested version of Mari
             msg = (
-                "The SG Pipeline Toolkit has not yet been fully tested with Mari %d.%dv%d. "
-                "You can continue to use the Toolkit but you may experience bugs or "
-                "instability.  Please report any issues you see via %s."
+                "The Flow Production Tracking has not yet been fully tested "
+                "with Mari %d.%dv%d. You can continue to use the Toolkit but you may "
+                "experience bugs or instability.  Please report any issues you see via %s."
                 % (
                     mari_version.major(),
                     mari_version.minor(),
@@ -114,7 +115,7 @@ class MariEngine(sgtk.platform.Engine):
                 >= self.get_setting("compatibility_dialog_min_version")
             ):
                 # show the warning dialog the first time:
-                mari.utils.message(msg, "ShotGrid")
+                mari.utils.message(msg, "Flow Production Tracking")
                 os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"
 
             self.log_warning(msg)
@@ -283,7 +284,7 @@ class MariEngine(sgtk.platform.Engine):
         if not hasattr(self, "_debug_logging"):
             self._debug_logging = self.get_setting("debug_logging", False)
         if self._debug_logging:
-            print("SG Debug: %s" % msg)
+            print("PTR Debug: %s" % msg)
 
     def log_info(self, msg):
         """
@@ -297,7 +298,7 @@ class MariEngine(sgtk.platform.Engine):
         Log a warning
         :param msg:    The warning message to log
         """
-        msg = "SG Warning: %s" % msg
+        msg = "PTR Warning: %s" % msg
         print(msg)
         # mari.utils.message(msg)
 
@@ -306,7 +307,7 @@ class MariEngine(sgtk.platform.Engine):
         Log an error
         :param msg:    The error message to log
         """
-        msg = "SG Error: %s" % msg
+        msg = "PTR Error: %s" % msg
         print(msg)
         mari.utils.message(msg)
 
@@ -334,7 +335,7 @@ class MariEngine(sgtk.platform.Engine):
         if not md:
             # This project has never been opened with Toolkit running before
             # so don't need to do anything!
-            self.log_debug("Work area unchanged - the opened project is not SG aware!")
+            self.log_debug("Work area unchanged - the opened project is not PTR aware!")
             return
 
         # try to determine the project context from the metadata:
@@ -378,6 +379,6 @@ class MariEngine(sgtk.platform.Engine):
             # start new engine with the new context:
             sgtk.platform.start_engine(self.name, ctx.sgtk, ctx)
         except TankError as e:
-            self.log_error("Failed to start SG engine for Work Area %s: %s" % (ctx, e))
+            self.log_error("Failed to start PTR engine for Work Area %s: %s" % (ctx, e))
         except Exception as e:
-            self.log_exception("Failed to start SG engine for Work Area %s" % ctx)
+            self.log_exception("Failed to start PTR engine for Work Area %s" % ctx)
