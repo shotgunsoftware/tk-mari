@@ -1,19 +1,30 @@
-[![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status/Engines/tk-mari?repoName=shotgunsoftware%2Ftk-mari&branchName=master)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=97&repoName=shotgunsoftware%2Ftk-mari&branchName=master)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Linting](https://img.shields.io/badge/PEP8%20by-Hound%20CI-a873d1.svg)](https://houndci.com)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/nfa-vfxim/tk-mari?include_prereleases)](https://github.com/nfa-vfxim/tk-mari) 
+[![GitHub issues](https://img.shields.io/github/issues/nfa-vfxim/tk-mari)](https://github.com/nfa-vfxim/tk-mari/issues) 
 
-## Documentation
-This repository is a part of the Flow Production Tracking Toolkit.
 
-- For more information about this app and for release notes, *see the wiki section*.
-- For general information and documentation, click here: https://help.autodesk.com/view/SGDEV/ENU/?contextId=SA_INTEGRATIONS_USER_GUIDE
-- For information about Flow Production Tracking in general, click here: https://help.autodesk.com/view/SGSUB/ENU/
+# Flow Production Tracking Engine for Mari <img src="icon_256.png" alt="Icon" height="24"/>
 
-## Using this app in your Setup
-All the apps that are part of our standard app suite are pushed to our App Store.
-This is where you typically go if you want to install an app into a project you are
-working on. For an overview of all the Apps and Engines in the Toolkit App Store,
-click here: https://help.autodesk.com/view/SGDEV/ENU/?contextId=PC_TOOLKIT_APPS
+Flow Production Tracking Integration in Mari
 
-## Have a Question?
-Don't hesitate to contact us at https://knowledge.autodesk.com/contact-support
+## Requirements
+
+| ShotGrid version | Core version | Engine version |
+|------------------|--------------|----------------|
+| -                | v0.19.18     | -              |
+
+## Configuration
+
+### Booleans
+
+| Name            | Description                                                     | Default value |
+|-----------------|-----------------------------------------------------------------|---------------|
+| `debug_logging` | Controls whether debug messages should be emitted to the logger | False         |
+
+
+### Integers
+
+| Name                               | Description                                                                                                                                                                                                                                                                  | Default value |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| `compatibility_dialog_min_version` | Specify the minimum Application major version that will prompt a warning if it isn't yet fully supported and tested with Toolkit.  To disable the warning dialog for the version you are testing, it is recomended that you set this value to the current major version + 1. | 2             |
+
+
