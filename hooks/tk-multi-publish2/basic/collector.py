@@ -62,105 +62,19 @@ class MariSessionCollector(HookBaseClass):
             )
             return
 
-        publisher = self.parent
-
-        icon_path = os.path.join(
-            self.disk_location, os.pardir, "icons", "mari_channel.png"
-        )
-
         layers_icon_path = os.path.join(
             self.disk_location, os.pardir, "icons", "mari_layer.png"
         )
-
-        layer_icon_path = os.path.join(
-            self.disk_location, os.pardir, "icons", "texture.png"
-        )
-
-        layers_item = None
         thumbnail = self._extract_mari_thumbnail()
-        # Look for all layers for all channels on all geometry.  Create items for both
-        # the flattened channel as well as the individual layers
-        for geo in mari.geo.list():
-            geo_name = geo.name()
 
-            for channel in geo.channelList():
-                channel_name = channel.name()
-
-                # find all collected layers:
-                collected_layers = self._find_layers_r(channel.layerList())
-                if not collected_layers:
-                    # no layers to publish!
-                    self.logger.warning(
-                        "Channel '%s' has no layers. The channel will not be collected"
-                        % channel_name
-                    )
-                    continue
-
-                # add item for whole flattened channel:
-                item_name = "%s, %s" % (geo.name(), channel.name())
-                channel_item = parent_item.create_item(
-                    "mari.texture", "Channel", item_name
-                )
-                channel_item.thumbnail_enabled = True
-                channel_item.set_icon_from_path(icon_path)
-                channel_item.properties["mari_geo_name"] = geo_name
-                channel_item.properties["mari_channel_name"] = channel_name
-                channel_item.set_thumbnail_from_path(thumbnail)
-
-                if len(collected_layers) > 0 and layers_item is None:
-                    layers_item = channel_item.create_item(
-                        "mari.layers",
-                        "Unflattened layers for the channel",
-                        "Texture Channel Layers",
-                    )
-                    layers_item.set_icon_from_path(layers_icon_path)
-
-                # add item for each collected layer:
-                found_layer_names = set()
-                for layer in collected_layers:
-                    # for now, duplicate layer names aren't allowed!
-                    layer_name = layer.name()
-                    if layer_name in found_layer_names:
-                        # we might want to handle this one day...
-                        self.logger.warning(
-                            "Duplicate layer name found: %s. Layer will not be exported"
-                            % layer_name
-                        )
-                        pass
-                    found_layer_names.add(layer_name)
-
-                    item_name = "%s, %s (%s)" % (geo.name(), channel.name(), layer_name)
-                    layer_item = layers_item.create_item(
-                        "mari.texture", "Layer", item_name
-                    )
-                    layer_item.thumbnail_enabled = True
-                    layer_item.set_icon_from_path(layer_icon_path)
-                    layer_item.properties["mari_geo_name"] = geo_name
-                    layer_item.properties["mari_channel_name"] = channel_name
-                    layer_item.properties["mari_layer_name"] = layer_name
-                    layer_item.set_thumbnail_from_path(thumbnail)
-
-    def _find_layers_r(self, layers):
-        """
-        Find all layers within the specified list of layers.  This will return
-        all layers that are either paintable or procedural and traverse any layer groups
-        to find all grouped layers to be collected
-        :param layers:  The list of layers to inspect
-        :returns:       A list of all collected layers
-        """
-        collected_layers = []
-        for layer in layers:
-            # Note, only paintable or procedural layers are exportable from Mari - all
-            # other layer types are only used within Mari.
-            if layer.isPaintableLayer() or layer.isProceduralLayer():
-                # these are the only types of layers that can be collected
-                collected_layers.append(layer)
-            elif layer.isGroupLayer():
-                # recurse over all layers in the group looking for exportable layers:
-                grouped_layers = self._find_layers_r(layer.layerStack().layerList())
-                collected_layers.extend(grouped_layers or [])
-
-        return collected_layers
+        item_name = "All channels flattened"
+        all_channels_flattened = parent_item.create_item(
+            "mari.texture", "Texture folder", item_name
+        )
+        all_channels_flattened.thumbnail_enabled = True
+        all_channels_flattened.set_icon_from_path(layers_icon_path)
+        all_channels_flattened.set_thumbnail_from_path(thumbnail)
+        all_channels_flattened.context_change_allowed = True
 
     def _extract_mari_thumbnail(self):
         """

@@ -11,7 +11,6 @@
 import mari
 import os
 import pprint
-import re
 import sgtk
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -112,11 +111,6 @@ class MariTexturesPublishPlugin(HookBaseClass):
         part of its environment configuration.
         """
         return {
-            "Publish Type": {
-                "type": "shotgun_publish_type",
-                "default": "UDIM Image",
-                "description": "PTR publish type to associate publishes with.",
-            },
             "Publish Template": {
                 "type": "template",
                 "default": None,
@@ -167,7 +161,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         # is a temporary measure until the publisher handles context switching
         # natively.
         if settings.get("Publish Template").value:
-            item.context_change_allowed = False
+            item.context_change_allowed = True
 
         return {"accepted": True, "checked": True}
 
@@ -197,34 +191,6 @@ class MariTexturesPublishPlugin(HookBaseClass):
             self.logger.error(error_msg)
             raise Exception(error_msg)
 
-        geo_name = item.properties["mari_geo_name"]
-        geo = mari.geo.find(geo_name)
-        if not geo:
-            error_msg = (
-                "Failed to find geometry in the project! Validation failed." % geo_name
-            )
-            self.logger.error(error_msg)
-            raise Exception(error_msg)
-
-        channel_name = item.properties["mari_channel_name"]
-        channel = geo.findChannel(channel_name)
-        if not channel:
-            error_msg = (
-                "Failed to find channel on geometry! Validation failed." % channel_name
-            )
-            self.logger.error(error_msg)
-            raise Exception(error_msg)
-
-        layer_name = item.properties.get("mari_layer_name")
-        if layer_name:
-            layer = channel.findLayer(layer_name)
-            if not layer:
-                error_msg = (
-                    "Failed to find layer for channel: %s Validation failed."
-                    % layer_name
-                )
-                self.logger.error(error_msg)
-                raise Exception(error_msg)
         return True
 
     def publish(self, settings, item):
@@ -245,13 +211,6 @@ class MariTexturesPublishPlugin(HookBaseClass):
             proj.save()
 
         publisher = self.parent
-
-        geo_name = item.properties["mari_geo_name"]
-        geo = mari.geo.find(geo_name)
-        channel_name = item.properties["mari_channel_name"]
-        channel = geo.findChannel(channel_name)
-        layer_name = item.properties.get("mari_layer_name")
-
         publish_template = item.properties["publish_template"]
 
         # Get fields from the current context
@@ -259,25 +218,10 @@ class MariTexturesPublishPlugin(HookBaseClass):
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        # For geo name, strip out the non-alphanumeric characters because Mari's
-        # publish template filter does not allow non-alphanumeric characters in
-        # the geo name.
-        geo_name = re.sub(r"[\W_]+", "", geo_name)
-        fields["name"] = geo_name
-
-        fields["channel"] = channel_name
-        fields["layer"] = layer_name
-        fields["UDIM"] = "$UDIM"
-
-        # get the publish name. This will ensure we get a
-        # consistent name across version publishes of this file.
-        if layer_name:
-            publish_name = "%s, %s - %s" % (geo_name, channel_name, layer_name)
-        else:
-            publish_name = "%s, %s" % (geo_name, channel_name)
+        publish_name = "Asset_textures"
 
         existing_publishes = self._find_publishes(
-            self.parent.context, publish_name, settings["Publish Type"].value
+            self.parent.context, publish_name, "Texture Folder"
         )
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
 
@@ -285,46 +229,23 @@ class MariTexturesPublishPlugin(HookBaseClass):
 
         publish_path = publish_template.apply_fields(fields)
 
-        # get the path in a normalized state. no trailing separator, separators
-        # are appropriate for current os, no double separators, etc.
         path = sgtk.util.ShotgunPath.normalize(publish_path)
 
         self.logger.info("A Publish will be created in PTR and linked to:")
         self.logger.info("  %s" % (path,))
 
-        if layer_name:
-            layer = channel.findLayer(layer_name)
-            layer.exportImages(path)
-        else:
-            # publish the entire channel, flattened
-            layers = channel.layerList()
-            if len(layers) == 1:
-                # only one layer so just publish it:
-                # Note - this works around an issue that was reported (#27945) where flattening a channel
-                # with only a single layer would cause Mari to crash - this bug was not reproducible by
-                # us but happened 100% for the client!
-                layer = layers[0]
-                layer.exportImages(path)
-            elif len(layers) > 1:
-                # flatten layers in the channel and publish the flattened layer:
-                # remember the current channel:
-                current_channel = geo.currentChannel()
-                # duplicate the channel so we don't operate on the original:
-                duplicate_channel = geo.createDuplicateChannel(channel)
-                try:
-                    # flatten it into a single layer:
-                    flattened_layer = duplicate_channel.flatten()
-                    # export the images for it:
-                    flattened_layer.exportImages(path)
-                finally:
-                    # set the current channel back - not doing this will result in Mari crashing
-                    # when the duplicated channel is removed!
-                    geo.setCurrentChannel(current_channel)
-                    # remove the duplicate channel, destroying the channel and the flattened layer:
-                    geo.removeChannel(duplicate_channel, geo.DESTROY_ALL)
-            else:
-                self.logger.error(
-                    "Channel '%s' doesn't appear to have any layers!" % channel.name()
+        # We just yeet all channels to the export folder
+        for geo in mari.geo.list():
+            geo_name = geo.name()
+            self.logger.debug(f"Found geometry {geo_name}, exporting all channels.")
+
+            for channel in geo.channelList():
+                self.logger.debug(f"Found channel {channel.name()}. Exporting EXRs.")
+                channel.exportImagesFlattened(
+                    f"{path}/{geo.name()}_$CHANNEL.$UDIM.exr",
+                    0,
+                    [],
+                    {"compression": "zip"},
                 )
 
         # arguments for publish registration
@@ -337,7 +258,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
             "name": publish_name,
             "version_number": version,
             "thumbnail_path": item.get_thumbnail_as_path(),
-            "published_file_type": settings["Publish Type"].value,
+            "published_file_type": "Texture Folder",
             "dependency_paths": [],
         }
 
