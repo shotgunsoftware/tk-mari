@@ -69,18 +69,19 @@ class MariEngine(sgtk.platform.Engine):
         self.log_debug("%s: Initializing..." % self)
 
         # check that this version of Mari is supported:
-        MIN_VERSION = (4, 0, 0)  # completely unsupported below this!
-        MAX_VERSION = (6, 0)  # untested above this so display a warning
+        INC_VERSION = (4, 0, 0)  # Known not working below this version
+        MIN_VERSION = (5, 0, 0)  # Unsupported below this version
+        MAX_VERSION = (7, 0)  # untested above this so display a warning
 
         mari_version = mari.app.version()
-        if mari_version.major() < MIN_VERSION[0] or (
-            mari_version.major() == MIN_VERSION[0]
-            and mari_version.minor() < MIN_VERSION[1]
+        if mari_version.major() < INC_VERSION[0] or (
+            mari_version.major() == INC_VERSION[0]
+            and mari_version.minor() < INC_VERSION[1]
         ):
             # this is a completely unsupported version of Mari!
             raise TankError(
-                "This version of Mari (%d.%dv%d) is not supported by "
-                "Flow Production Tracking. The minimum required "
+                "This version of Mari (%d.%dv%d) is not compatible with "
+                "Flow Production Tracking. The minimum supported "
                 "version is %d.%dv%d."
                 % (
                     mari_version.major(),
@@ -91,6 +92,36 @@ class MariEngine(sgtk.platform.Engine):
                     MIN_VERSION[2],
                 )
             )
+
+        elif mari_version.major() < MIN_VERSION[0] or (
+            mari_version.major() == MIN_VERSION[0]
+            and mari_version.minor() < MIN_VERSION[1]
+        ):
+            # this is an older, unsupported version of Mari
+            msg = (
+                "Flow Production Tracking (FPTR) does not support Mari versions "
+                "below {min_major}.{min_minor}."
+                "You can continue to use FPTR Toolkit with Mari "
+                "{cur_major}.{cur_minor}v{cur_rev} but you may experience bugs "
+                "or instabilities.".format(
+                    cur_major=mari_version.major(),
+                    cur_minor=mari_version.minor(),
+                    cur_rev=mari_version.revision(),
+                    min_major=MIN_VERSION[0],
+                    min_minor=MIN_VERSION[1],
+                )
+            )
+
+            if (
+                self.has_ui
+                and "SGTK_MARI_VERSION_WARNING_SHOWN" not in os.environ
+            ):
+                # show the warning dialog the first time:
+                mari.utils.message(msg, "Flow Production Tracking")
+                os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"
+
+            self.log_warning(msg)
+
         elif mari_version.major() > MAX_VERSION[0] or (
             mari_version.major() == MAX_VERSION[0]
             and mari_version.minor() > MAX_VERSION[1]
