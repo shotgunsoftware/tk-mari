@@ -12,7 +12,6 @@
 A Toolkit engine for Mari
 """
 
-from __future__ import print_function
 import mari
 import mari.utils
 import sgtk
