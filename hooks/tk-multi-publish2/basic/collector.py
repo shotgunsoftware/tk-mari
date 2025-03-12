@@ -45,7 +45,7 @@ class MariSessionCollector(HookBaseClass):
         """
 
         # return base class settings as there are is no Work Template at the moment for Mari
-        return super(MariSessionCollector, self).settings or {}
+        return super().settings or {}
 
     def process_current_session(self, settings, parent_item):
         """

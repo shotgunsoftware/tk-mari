@@ -9,7 +9,6 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 
-from __future__ import print_function
 import os
 import mari
 
