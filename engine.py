@@ -49,12 +49,7 @@ class MariEngine(sgtk.platform.Engine):
         try:
             mari_version = mari.app.version()
 
-            host_info["version"] = "%s.%s.%s" % (
-                mari_version.major(),
-                mari_version.minor(),
-                mari_version.revision(),
-            )
-
+            host_info["version"] = mari_version.string()
         except:
             # Fallback to initialization value above
             pass
