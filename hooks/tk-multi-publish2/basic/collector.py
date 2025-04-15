@@ -219,31 +219,5 @@ class MariSessionCollector(HookBaseClass):
         """
         Generate a screenshot from the given canvas.
         """
-        thumb = None
 
-        # The capture method was introduced to deprecate captureImage in 4.6,
-        # so use it if available. We could have use the inspect module here to
-        # differentiate between the signatures with and without arguments
-        # for capture, but the module can't read the parameters from C Python
-        # methods.
-
-        # In Mari 4.6.4+ we can capture with width and height passed in
-        try:
-            return canvas.capture(thumb_width, thumb_height)
-        except Exception:
-            pass
-        else:
-            return thumb
-
-        # In some earlier versions, we need to call scale after capture
-        try:
-            image = canvas.capture()
-            if image:
-                image = image.scaled(thumb_width, thumb_height)
-            return image
-        except Exception:
-            pass
-
-        # Finally in older versions of Mari, capture is not even an option, so call
-        # captureImage
-        return canvas.captureImage(thumb_width, thumb_height)
+        return canvas.capture(thumb_width, thumb_height)
