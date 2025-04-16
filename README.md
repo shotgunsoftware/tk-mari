@@ -1,8 +1,8 @@
 # Toolkit Engine for Mari
 
-![Supported Mari versions: 6 - 7](https://img.shields.io/badge/Mari-7_|_6-blue.svg "Supported Mari versions")
-[![Supported VFX Platform: 2022 - 2025](https://img.shields.io/badge/VFX_Platform-2025_|_2024_|_2023_|_2022-blue.svg)](http://www.vfxplatform.com/ "Supported VFX Platform")
-[![Supported Python versions: 3.9 - 3.11](https://img.shields.io/badge/Python-3.11_|_3.10_|_3.9-blue.svg?logo=python)](https://www.python.org/ "Supported Python versions")
+![Supported Mari versions: 6 - 7](https://img.shields.io/badge/Mari-7_|_6-blue "Supported Mari versions")
+[![Supported VFX Platform: 2022 - 2025](https://img.shields.io/badge/VFX_Platform-2025_|_2024_|_2023_|_2022-blue)](http://www.vfxplatform.com/ "Supported VFX Platform")
+[![Supported Python versions: 3.9 - 3.11](https://img.shields.io/badge/Python-3.11_|_3.10_|_3.9-blue?logo=python&logoColor=f5f5f5)](https://www.python.org/ "Supported Python versions")
 
 [![Build Status](https://dev.azure.com/shotgun-ecosystem/Toolkit/_apis/build/status/Engines/tk-mari?repoName=shotgunsoftware%2Ftk-mari&branchName=master)](https://dev.azure.com/shotgun-ecosystem/Toolkit/_build/latest?definitionId=97&repoName=shotgunsoftware%2Ftk-mari&branchName=master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
