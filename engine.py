@@ -25,6 +25,7 @@ VERSION_NEWEST_SUPPORTED = (7, 0, 99)
 # Caution: make sure compatibility_dialog_min_version default value in info.yml
 # is equal to VERSION_NEWEST_SUPPORTED
 
+
 class MariEngine(sgtk.platform.Engine):
     """
     The engine class
@@ -143,7 +144,9 @@ For information regarding support engine versions, please visit this page:
 
         elif mari_version < VERSION_NEWEST_SUPPORTED:
             # Within the range of supported versions
-            self.logger.debug(f"Running Mari version { self.version_str(mari_version) }")
+            self.logger.debug(
+                f"Running Mari version { self.version_str(mari_version) }"
+            )
 
         else:
             # Newer than the newest supported version
