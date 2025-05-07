@@ -12,19 +12,18 @@
 A Toolkit engine for Mari
 """
 
-import os
-import re
-
 import mari
 import mari.utils
 import sgtk
+import os
 
 
 # Mari versions compatibility constants
-VERSION_OLDEST_COMPATIBLE = 5
-VERSION_OLDEST_SUPPORTED = 6
-VERSION_NEWEST_SUPPORTED = 7
-
+VERSION_OLDEST_COMPATIBLE = (5, 0, 0)
+VERSION_OLDEST_SUPPORTED = (6, 1, 0)
+VERSION_NEWEST_SUPPORTED = (7, 0, 99)
+# Caution: make sure compatibility_dialog_min_version default value in info.yml
+# is equal to VERSION_NEWEST_SUPPORTED
 
 class MariEngine(sgtk.platform.Engine):
     """
@@ -75,82 +74,124 @@ class MariEngine(sgtk.platform.Engine):
         self.log_debug("%s: Initializing..." % self)
 
         # check that this version of Mari is supported:
-
-        mari_version = mari.app.version()
-
-        url_doc_supported_versions = "https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_si_integrations_engine_supported_versions_html"
-        compatibility_warning_msg = None
-        show_warning_dlg = (
-            self.has_ui and "SGTK_MARI_VERSION_WARNING_SHOWN" not in os.environ
+        mari_version = (
+            mari.app.version().major(),
+            mari.app.version().minor(),
+            mari.app.version().revision(),
         )
 
-        if mari_version.major() < VERSION_OLDEST_COMPATIBLE:
-            # this is a completely unsupported version of Mari!
+        url_doc_supported_versions = "https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_si_integrations_engine_supported_versions_html"
+
+        if mari_version < VERSION_OLDEST_COMPATIBLE:
+            # Older than the oldest compatible version
+
+            # No mari.utils.message here because Mari will issue a warning
+            # message from the TankError exception
+
             raise sgtk.TankError(
-                "Flow Production Tracking is no longer compatible with Mari "
-                f"versions older than {VERSION_OLDEST_COMPATIBLE}.\n"
-                "For information regarding support engine versions, please "
-                f"visit this page: {url_doc_supported_versions}"
-            )
+                """
+Flow Production Tracking is no longer compatible with {product} versions older
+than {version}.
 
-        elif mari_version.major() < VERSION_OLDEST_SUPPORTED:
-            # Older than the oldest supported version
-            compatibility_warning_msg = (
-                "Flow Production Tracking no longer supports Mari versions "
-                f"older than {VERSION_OLDEST_SUPPORTED}.\n"
-                "You can continue to use Toolkit but you may experience bugs "
-                "or instabilities.\n\n"
-                "For information regarding support engine versions, please "
-                "visit this page: {url_doc_supported_versions}"
-            )
-
-        elif mari_version.major() < VERSION_NEWEST_SUPPORTED:
-            # Within the range of supported versions
-            self.logger.debug(f"Running Mari version {mari_version.string()}")
-
-        else:
-            # this is an untested version of Mari
-            compatibility_warning_msg = (
-                "The Flow Production Tracking has not yet been fully tested "
-                f"with Mari {mari_version.string()}.\n"
-                "You can continue to use the Toolkit but you may experience "
-                "bugs or instabilities.\n\n"
-                "Please report any issues to: {support_url}"
-            )
-
-            show_warning_dlg = show_warning_dlg and (
-                mari_version.major()
-                >= self.get_setting(
-                    "compatibility_dialog_min_version",
-                    default=VERSION_NEWEST_SUPPORTED,
+For information regarding support engine versions, please visit this page:
+{url_doc_supported_versions}
+                """.strip().format(
+                    product="Mari",
+                    url_doc_supported_versions=url_doc_supported_versions,
+                    version=self.version_str(VERSION_OLDEST_COMPATIBLE),
                 )
             )
 
-        if compatibility_warning_msg:
-            if show_warning_dlg:
+        elif mari_version < VERSION_OLDEST_SUPPORTED:
+            # Older than the oldest supported version
+            self.logger.warning(
+                "Flow Production Tracking no longer supports {product} "
+                "versions older than {version}".format(
+                    product="Mari",
+                    version=self.version_str(VERSION_OLDEST_SUPPORTED),
+                )
+            )
+
+            if self.has_ui:
+                mari.utils.message(
+                    """
+Flow Production Tracking no longer supports {product} versions older than
+{version}.
+You can continue to use Toolkit but you may experience bugs or instabilities.
+
+For information regarding support engine versions, please visit this page:
+{url_doc_supported_versions}
+                    """.strip()
+                    .replace(
+                        # Precense of \n breaks the Rich Text Format
+                        "\n",
+                        "<br>",
+                    )
+                    .format(
+                        product="Mari",
+                        url_doc_supported_versions='<a href="{u}">{u}</a>'.format(
+                            u=url_doc_supported_versions,
+                        ),
+                        version=self.version_str(VERSION_OLDEST_SUPPORTED),
+                    ),
+                    title="Warning - Flow Production Tracking Compatibility!".ljust(
+                        # Padding to try to prevent the dialog being insanely narrow
+                        70
+                    ),
+                    icon=sgtk.platform.qt.QtGui.QMessageBox.Warning,
+                )
+
+        elif mari_version < VERSION_NEWEST_SUPPORTED:
+            # Within the range of supported versions
+            self.logger.debug(f"Running Mari version { self.version_str(mari_version) }")
+
+        else:
+            # Newer than the newest supported version
+            # This is an untested version of Mari.
+            self.logger.warning(
+                "Flow Production Tracking has not yet been fully tested with "
+                "{product} version {version}.".format(
+                    product="Mari",
+                    version=self.version_str(mari_version),
+                )
+            )
+
+            if (
+                self.has_ui
+                and "SGTK_MARI_VERSION_WARNING_SHOWN" not in os.environ
+                and mari_version[0]
+                >= self.get_setting("compatibility_dialog_min_version")
+            ):
                 # show the warning dialog the first time
                 os.environ["SGTK_MARI_VERSION_WARNING_SHOWN"] = "1"
 
                 mari.utils.message(
-                    compatibility_warning_msg.replace(
+                    """
+Flow Production Tracking has not yet been fully tested with {product} version
+{version}.
+You can continue to use Toolkit but you may experience bugs or instabilities.
+
+Please report any issues to:
+{support_url}
+                    """.strip()
+                    .replace(
                         # Precense of \n breaks the Rich Text Format
                         "\n",
                         "<br>",
-                    ).format(
-                        support_url='<a href="{u}">{u}</a>'.format(u=sgtk.support_url),
-                        url_doc_supported_versions='<a href="{u}">{u}</a>'.format(
-                            u=url_doc_supported_versions,
+                    )
+                    .format(
+                        product="Mari",
+                        support_url='<a href="{u}">{u}</a>'.format(
+                            u=sgtk.support_url,
                         ),
+                        version=self.version_str(mari_version),
                     ),
-                    "Warning - Flow Production Tracking Compatibility!".ljust(70),
+                    title="Warning - Flow Production Tracking Compatibility!".ljust(
+                        # Padding to try to prevent the dialog being insanely narrow
+                        70
+                    ),
+                    icon=sgtk.platform.qt.QtGui.QMessageBox.Warning,
                 )
-
-            self.log_warning(
-                re.sub("\\n+", " ", compatibility_warning_msg).format(
-                    support_url=sgtk.support_url,
-                    url_doc_supported_versions=url_doc_supported_versions,
-                )
-            )
 
         # cache handles to the various manager instances:
         tk_mari = self.import_module("tk_mari")
@@ -204,6 +245,10 @@ class MariEngine(sgtk.platform.Engine):
         Detect and return if mari is not running in terminal mode
         """
         return not mari.app.inTerminalMode()
+
+    @classmethod
+    def version_str(cls, version_tuple):
+        return "{}.{}v{}".format(*version_tuple)
 
     def find_geometry_for_publish(self, sg_publish):
         """
