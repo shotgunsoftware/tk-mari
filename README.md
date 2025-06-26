@@ -1,6 +1,6 @@
 # Toolkit Engine for Mari
 
-![Supported Mari versions: 6 - 7](https://img.shields.io/badge/Mari-7_|_6-blue "Supported Mari versions")
+![Supported Mari versions: 6.0v3 - 7.1v2](https://img.shields.io/badge/Mari-6.0v3_--_7.1v2-blue "Supported Mari versions")
 [![Supported VFX Platform: 2022 - 2025](https://img.shields.io/badge/VFX_Platform-2025_|_2024_|_2023_|_2022-blue)](http://www.vfxplatform.com/ "Supported VFX Platform")
 [![Supported Python versions: 3.9 - 3.11](https://img.shields.io/badge/Python-3.11_|_3.10_|_3.9-blue?logo=python&logoColor=f5f5f5)](https://www.python.org/ "Supported Python versions")
 
