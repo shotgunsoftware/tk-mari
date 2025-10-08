@@ -206,12 +206,10 @@ class MenuGenerator(object):
             # run the app
             if sgtk.util.is_linux():
                 cmd = 'xdg-open "%s"' % disk_location
-            elif sgtk.util.is_macos():
-                cmd = 'open "%s"' % disk_location
             elif sgtk.util.is_windows():
                 cmd = 'cmd.exe /C start "Folder" "%s"' % disk_location
             else:
-                raise Exception("Platform '%s' is not supported." % system)
+                raise Exception(f"Platform '{sys.platform}' is not supported.")
 
             exit_code = os.system(cmd)
             if exit_code != 0:
