@@ -87,9 +87,7 @@ class MariTexturesPublishPlugin(HookBaseClass):
         A file can be published multiple times however only the most recent
         publish will be available to other users. Warnings will be provided
         during validation if there are previous publishes.
-        """ % (
-            loader_url,
-        )
+        """ % (loader_url,)
         # TODO: add link to workflow docs
 
     @property
