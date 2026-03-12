@@ -17,7 +17,6 @@ import mari.utils
 import sgtk
 import os
 
-
 # Mari versions compatibility constants
 VERSION_OLDEST_COMPATIBLE = (5, 0, 0)
 VERSION_OLDEST_SUPPORTED = (6, 0, 3)
