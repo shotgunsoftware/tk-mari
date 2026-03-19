@@ -20,7 +20,7 @@ import os
 # Mari versions compatibility constants
 VERSION_OLDEST_COMPATIBLE = (5, 0, 0)
 VERSION_OLDEST_SUPPORTED = (6, 0, 3)
-VERSION_NEWEST_SUPPORTED = (7, 1, 99)
+VERSION_NEWEST_SUPPORTED = (7, 5, 99)
 # Caution: make sure compatibility_dialog_min_version default value in info.yml
 # is equal to VERSION_NEWEST_SUPPORTED
 
